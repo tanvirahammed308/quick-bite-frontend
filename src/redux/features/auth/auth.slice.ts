@@ -22,7 +22,7 @@ export const getCurrentUser = createAsyncThunk(
   'user/getCurrentUser',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await api.get('/users/me');
+      const response = await api.get('/auth/me');
       return response.data.user as IUser;
     } catch (error) {
       if (error instanceof AxiosError) {
@@ -41,7 +41,7 @@ export const updateProfile = createAsyncThunk(
   'user/updateProfile',
   async (data: IUpdateProfileData, { rejectWithValue }) => {
     try {
-      const response = await api.put('/users/profile', data);
+      const response = await api.put('/auth/me', data);
       return response.data.user as IUser;
     } catch (error) {
       if (error instanceof AxiosError) {
@@ -57,7 +57,7 @@ export const getAllUsers = createAsyncThunk(
   'user/getAllUsers',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await api.get('/users');
+      const response = await api.get('/auth');
       return {
         users: response.data.users as IUser[],
         count: response.data.count as number,
@@ -77,7 +77,7 @@ export const getUserById = createAsyncThunk(
   'user/getUserById',
   async (id: string, { rejectWithValue }) => {
     try {
-      const response = await api.get(`/users/${id}`);
+      const response = await api.get(`/auth/${id}`);
       return response.data.user as IUser;
     } catch (error) {
       if (error instanceof AxiosError) {
@@ -94,7 +94,7 @@ export const updateUserRole = createAsyncThunk(
   'user/updateUserRole',
   async ({ id, role }: IUpdateRoleData, { rejectWithValue }) => {
     try {
-      const response = await api.put(`/users/${id}/role`, { role });
+      const response = await api.put(`/auth/${id}/role`, { role });
       return response.data.user as IUser;
     } catch (error) {
       if (error instanceof AxiosError) {
@@ -111,7 +111,7 @@ export const deleteUser = createAsyncThunk(
   'user/deleteUser',
   async (id: string, { rejectWithValue }) => {
     try {
-      await api.delete(`/users/${id}`);
+      await api.delete(`/auth/${id}`);
       return id;
     } catch (error) {
       if (error instanceof AxiosError) {

@@ -1,26 +1,26 @@
-
 import { z } from "zod";
 
 
-const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+const passwordSchema = z.string()
+  .min(8, "Password must be at least 8 characters")
+  .max(50, "Password must be less than 50 characters")
+  .refine((val) => /[a-z]/.test(val), "Must contain lowercase letter (a-z)")
+  .refine((val) => /[A-Z]/.test(val), "Must contain uppercase letter (A-Z)")
+  .refine((val) => /[0-9]/.test(val), "Must contain number (0-9)")
+  .refine((val) => /[@$!%*?&]/.test(val), "Must contain special character (@$!%*?&)")
+  .refine((val) => !val.includes(" "), "Password cannot contain spaces");
 
-// Registration schema with strong password validation
+// Registration schema 
 export const registerSchema = z.object({
   name: z.string()
     .min(2, "Name must be at least 2 characters")
-    .max(50, "Name must be less than 50 characters"),
+    .max(50, "Name must be less than 50 characters")
+    .regex(/^[a-zA-Z\s]+$/, "Name can only contain letters and spaces"),
   
-  email: z.string()
-    .email("Please enter a valid email address"),
   
-  password: z.string()
-    .min(8, "Password must be at least 8 characters")
-    .max(50, "Password must be less than 50 characters")
-    .regex(/[a-z]/, "Password must contain at least one lowercase letter")
-    .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
-    .regex(/[0-9]/, "Password must contain at least one number")
-    .regex(/[@$!%*?&]/, "Password must contain at least one special character (@, $, !, %, *, ?, &)")
-    .refine((val) => !val.includes(" "), "Password cannot contain spaces"),
+  email: z.email("Please enter a valid email address"),
+  
+  password: passwordSchema,
   
   confirmPassword: z.string()
     .min(1, "Please confirm your password"),
@@ -29,15 +29,11 @@ export const registerSchema = z.object({
   path: ["confirmPassword"],
 });
 
-// Login schema 
+// Login schema
 export const loginSchema = z.object({
-  email: z.string()
-    .email("Please enter a valid email address"),
-  
-  password: z.string()
-    .min(1, "Password is required"),
+  email: z.email("Please enter a valid email address"),
+  password: z.string().min(1, "Password is required"),
 });
 
-// Types
 export type RegisterType = z.infer<typeof registerSchema>;
 export type LoginType = z.infer<typeof loginSchema>;

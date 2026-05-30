@@ -35,6 +35,7 @@ export default function Navbar() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [isMounted, setIsMounted] = useState(false); 
   
   // Refs for click outside
   const sidebarRef = useRef<HTMLDivElement>(null);
@@ -44,7 +45,12 @@ export default function Navbar() {
   // Check if user is admin
   const isAdmin = currentUser?.role === "admin";
 
-  // ✅ Restore user session on page refresh
+  //  Mark component as mounted on client-side only
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  //  Restore user session on page refresh (only on client)
   useEffect(() => {
     const restoreUserSession = async () => {
       const token = localStorage.getItem("token");
@@ -52,13 +58,11 @@ export default function Navbar() {
       
       if (token && savedUser && !currentUser) {
         try {
-          // Verify token is still valid
           const response = await api.get("/auth/me", {
             headers: { Authorization: `Bearer ${token}` },
           });
           if (response.data.user) {
             dispatch(setCurrentUser(response.data.user));
-            // Update localStorage with fresh user data
             localStorage.setItem("user", JSON.stringify(response.data.user));
           }
         } catch (error) {
@@ -79,7 +83,7 @@ export default function Navbar() {
     try {
       await signOut(auth);
       localStorage.removeItem("token");
-      localStorage.removeItem("user"); // ✅ Also remove user from localStorage
+      localStorage.removeItem("user");
       dispatch(clearUserData());
       
       await Swal.fire({
@@ -119,13 +123,11 @@ export default function Navbar() {
   // Close sidebar when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      // Close sidebar if clicking outside
       if (sidebarRef.current && !sidebarRef.current.contains(event.target as Node) &&
           menuButtonRef.current && !menuButtonRef.current.contains(event.target as Node)) {
         setIsSidebarOpen(false);
       }
       
-      // Close dropdown if clicking outside
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsDropdownOpen(false);
       }
@@ -169,6 +171,28 @@ export default function Navbar() {
     { name: "Settings", href: "/settings", icon: <FaCog className="text-xl" /> },
   ];
 
+  //  Show loading skeleton on server-side or before mounting
+  if (!isMounted) {
+    return (
+      <nav className="bg-white shadow-lg sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex-shrink-0">
+              <div className="flex items-center gap-2 text-xl font-bold text-gray-300">
+                <MdOutlineRestaurantMenu className="text-blue-300 text-3xl" />
+                <span>QuickBite</span>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="w-20 h-10 bg-gray-200 rounded-lg animate-pulse"></div>
+              <div className="w-24 h-10 bg-gray-200 rounded-lg animate-pulse"></div>
+            </div>
+          </div>
+        </div>
+      </nav>
+    );
+  }
+
   return (
     <>
       <nav className="bg-white shadow-lg sticky top-0 z-50">
@@ -178,12 +202,11 @@ export default function Navbar() {
             <div className="flex-shrink-0">
               <Link 
                 href="/" 
-                className="flex items-center gap-2 text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent hover:opacity-80 transition"
+                className="flex items-center gap-2 text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent hover:opacity-80 transition"
                 onClick={closeSidebar}
               >
                 <MdOutlineRestaurantMenu className="text-blue-600" />
-                <span >QuickBite</span>
-               
+                <span>QuickBite</span>
               </Link>
             </div>
 
@@ -200,7 +223,6 @@ export default function Navbar() {
                 </Link>
               ))}
               
-              {/* Admin Links (visible only to admin) */}
               {isAdmin && (
                 <div className="flex items-center space-x-8 border-l pl-8 ml-4">
                   {adminLinks.map((link) => (
@@ -225,7 +247,6 @@ export default function Navbar() {
                   <span className="text-gray-600 hidden sm:inline">Loading...</span>
                 </div>
               ) : currentUser ? (
-                // Logged in - User dropdown (desktop only)
                 <div className="relative user-dropdown hidden md:block" ref={dropdownRef}>
                   <button
                     onClick={() => setIsDropdownOpen(!isDropdownOpen)}
@@ -247,7 +268,6 @@ export default function Navbar() {
                     </div>
                   </button>
 
-                  {/* Dropdown Menu */}
                   {isDropdownOpen && (
                     <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl py-2 z-50 border border-gray-100">
                       <div className="px-4 py-3 border-b border-gray-100">
@@ -311,7 +331,6 @@ export default function Navbar() {
                   )}
                 </div>
               ) : (
-                // Desktop Login/Register buttons
                 <div className="hidden md:flex items-center gap-3">
                   <Link
                     href="/login"
@@ -323,7 +342,6 @@ export default function Navbar() {
                 </div>
               )}
 
-              {/* Mobile menu button */}
               <button
                 ref={menuButtonRef}
                 onClick={toggleSidebar}
@@ -340,18 +358,15 @@ export default function Navbar() {
       {/* Mobile Sidebar Menu */}
       {isSidebarOpen && (
         <>
-          {/* Overlay */}
           <div
             className="fixed inset-0 bg-black bg-opacity-50 z-40 transition-opacity duration-300"
             onClick={closeSidebar}
           />
           
-          {/* Sidebar Content */}
           <div
             ref={sidebarRef}
             className="fixed left-0 top-14 h-full w-80 bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-out overflow-y-auto"
           >
-            {/* Sidebar Header - User Info (when logged in) */}
             {currentUser && (
               <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
                 <div className="flex items-center gap-3">
@@ -377,9 +392,7 @@ export default function Navbar() {
               </div>
             )}
 
-            {/* Navigation Links */}
             <div className="py-4">
-              
               {navLinks.map((link) => (
                 <Link
                   key={link.name}
@@ -392,7 +405,6 @@ export default function Navbar() {
                 </Link>
               ))}
 
-              {/* Admin Links in Sidebar */}
               {isAdmin && (
                 <>
                   <div className="border-t border-gray-100 my-2"></div>
@@ -411,7 +423,6 @@ export default function Navbar() {
                 </>
               )}
 
-              {/* User Links in Sidebar (when logged in) */}
               {currentUser && (
                 <>
                   <div className="border-t border-gray-100 my-2"></div>
@@ -431,7 +442,6 @@ export default function Navbar() {
               )}
             </div>
 
-            {/* Auth Buttons for Sidebar (when not logged in) */}
             {!currentUser && !loading && (
               <div className="border-t border-gray-100 pt-4 pb-6">
                 <div className="px-4 space-y-3">
@@ -443,19 +453,11 @@ export default function Navbar() {
                     <FaUserCircle className="text-lg" />
                     Login
                   </Link>
-                  <Link
-                    href="/register"
-                    onClick={closeSidebar}
-                    className="flex items-center justify-center gap-2 w-full px-4 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:opacity-90 transition font-medium"
-                  >
-                    <HiOutlineUserAdd className="text-lg" />
-                    Register
-                  </Link>
+                  
                 </div>
               </div>
             )}
 
-            {/* Logout Button in Sidebar */}
             {currentUser && (
               <div className="border-t border-gray-100 pt-4 pb-6">
                 <div className="px-4">
@@ -475,7 +477,6 @@ export default function Navbar() {
               </div>
             )}
 
-            {/* Sidebar Footer */}
             <div className="border-t border-gray-100 pt-4 pb-6 bg-gray-50">
               <div className="px-4">
                 <p className="text-xs text-gray-400 text-center">

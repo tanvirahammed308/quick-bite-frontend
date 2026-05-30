@@ -17,7 +17,7 @@ import { setCurrentUser } from "@/redux/features/auth/auth.slice";
 import { loginSchema, LoginType } from "@/schemas/auth.schema";
 
 // React Icons
-import { FaEnvelope, FaLock, FaEye, FaEyeSlash, FaGoogle } from "react-icons/fa";
+import { FaEnvelope, FaLock, FaEye, FaEyeSlash } from "react-icons/fa";
 import { MdEmail } from "react-icons/md";
 import { HiOutlineLogin } from "react-icons/hi";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
@@ -62,9 +62,11 @@ export default function LoginPage() {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      // Save to Redux if user exists
+      // Save to Redux and localStorage if user exists
       if (response.data.user) {
         dispatch(setCurrentUser(response.data.user));
+        // ✅ Save to localStorage for persistence on refresh
+        localStorage.setItem("user", JSON.stringify(response.data.user));
       }
 
       await Swal.fire({
@@ -152,6 +154,8 @@ export default function LoginPage() {
 
       if (response.data.user) {
         dispatch(setCurrentUser(response.data.user));
+        // ✅ Save to localStorage for persistence on refresh
+        localStorage.setItem("user", JSON.stringify(response.data.user));
       }
 
       await Swal.fire({
@@ -294,7 +298,7 @@ export default function LoginPage() {
             <AiOutlineLoading3Quarters className="animate-spin text-xl" />
           ) : (
             <>
-              <FcGoogle  className="text-xl " />
+              <FcGoogle className="text-xl" />
               Login with Google
             </>
           )}

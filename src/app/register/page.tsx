@@ -65,14 +65,18 @@ export default function RegisterPage() {
       const token = await result.user.getIdToken();
       localStorage.setItem("token", token);
 
-      // ✅ Send name to backend via register endpoint
+      // Send name to backend via register endpoint
       const response = await api.post("/auth/register", {
         token: token,
         name: data.name
       });
 
       if (response.data.user) {
+        // ✅ Save to Redux
         dispatch(setCurrentUser(response.data.user));
+        
+        // ✅ Save to localStorage for persistence on refresh
+        localStorage.setItem("user", JSON.stringify(response.data.user));
       }
 
       await Swal.fire({
@@ -122,14 +126,18 @@ export default function RegisterPage() {
       // Get name from Google
       const googleName = result.user.displayName || "Google User";
 
-      // ✅ Send name to backend via register endpoint
+      // Send name to backend via register endpoint
       const response = await api.post("/auth/register", {
         token: token,
         name: googleName
       });
 
       if (response.data.user) {
+        // ✅ Save to Redux
         dispatch(setCurrentUser(response.data.user));
+        
+        // ✅ Save to localStorage for persistence on refresh
+        localStorage.setItem("user", JSON.stringify(response.data.user));
       }
 
       await Swal.fire({

@@ -4,10 +4,11 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
-import { clearUserData } from "@/redux/features/auth/auth.slice";
+import { clearUserData, setCurrentUser } from "@/redux/features/auth/auth.slice";
 import { auth } from "@/lib/firebase";
 import { signOut } from "firebase/auth";
 import Swal from "sweetalert2";
+import api from "@/lib/axios";
 
 // React Icons
 import { 
@@ -43,6 +44,34 @@ export default function Navbar() {
   // Check if user is admin
   const isAdmin = currentUser?.role === "admin";
 
+  // ✅ Restore user session on page refresh
+  useEffect(() => {
+    const restoreUserSession = async () => {
+      const token = localStorage.getItem("token");
+      const savedUser = localStorage.getItem("user");
+      
+      if (token && savedUser && !currentUser) {
+        try {
+          // Verify token is still valid
+          const response = await api.get("/auth/me", {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (response.data.user) {
+            dispatch(setCurrentUser(response.data.user));
+            // Update localStorage with fresh user data
+            localStorage.setItem("user", JSON.stringify(response.data.user));
+          }
+        } catch (error) {
+          console.error("Session expired:", error);
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+        }
+      }
+    };
+    
+    restoreUserSession();
+  }, [dispatch, currentUser]);
+
   // Handle logout
   const handleLogout = async () => {
     setIsLoggingOut(true);
@@ -50,6 +79,7 @@ export default function Navbar() {
     try {
       await signOut(auth);
       localStorage.removeItem("token");
+      localStorage.removeItem("user"); // ✅ Also remove user from localStorage
       dispatch(clearUserData());
       
       await Swal.fire({
@@ -289,12 +319,7 @@ export default function Navbar() {
                   >
                     Login
                   </Link>
-                  <Link
-                    href="/register"
-                    className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:opacity-90 transition font-medium"
-                  >
-                    Register
-                  </Link>
+                  
                 </div>
               )}
 

@@ -4,8 +4,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { 
-  createUserWithEmailAndPassword, 
-  updateProfile,
+  signInWithEmailAndPassword,
   signInWithPopup,
   GoogleAuthProvider
 } from "firebase/auth";
@@ -15,62 +14,55 @@ import Swal from "sweetalert2";
 import api from "@/lib/axios";
 import { useAppDispatch } from "@/redux/hooks";
 import { setCurrentUser } from "@/redux/features/auth/auth.slice";
-import { registerSchema, RegisterType } from "@/schemas/auth.schema";
+import { loginSchema, LoginType } from "@/schemas/auth.schema";
 
 // React Icons
-import { FaUser, FaEnvelope, FaLock, FaEye, FaEyeSlash } from "react-icons/fa";
+import { FaEnvelope, FaLock, FaEye, FaEyeSlash, FaGoogle } from "react-icons/fa";
 import { MdEmail } from "react-icons/md";
-import { HiOutlineUserAdd } from "react-icons/hi";
+import { HiOutlineLogin } from "react-icons/hi";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import { FcGoogle } from "react-icons/fc";
 
-export default function RegisterPage() {
+export default function LoginPage() {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const {
     register,
     handleSubmit,
     formState: { errors },
-    watch,
     reset,
-  } = useForm<RegisterType>({
-    resolver: zodResolver(registerSchema),
+  } = useForm<LoginType>({
+    resolver: zodResolver(loginSchema),
   });
 
-  const password = watch("password");
-
-  // Email/Password Registration
-  const onSubmit = async (data: RegisterType) => {
+  // Email/Password Login
+  const onSubmit = async (data: LoginType) => {
     setIsLoading(true);
 
     try {
-      // Create user in Firebase
-      const result = await createUserWithEmailAndPassword(
+      // Sign in with Firebase
+      const result = await signInWithEmailAndPassword(
         auth,
         data.email,
         data.password
       );
 
-      // Update Firebase profile
-      await updateProfile(result.user, {
-        displayName: data.name,
-      });
-
       // Get Firebase token
       const token = await result.user.getIdToken();
+
+      // Store token in localStorage
       localStorage.setItem("token", token);
 
-      // ✅ Send name to backend via register endpoint
-      const response = await api.post("/auth/register", {
-        token: token,
-        name: data.name
+      // Get user from backend
+      const response = await api.get("/auth/me", {
+        headers: { Authorization: `Bearer ${token}` },
       });
 
+      // Save to Redux if user exists
       if (response.data.user) {
         dispatch(setCurrentUser(response.data.user));
       }
@@ -78,7 +70,7 @@ export default function RegisterPage() {
       await Swal.fire({
         icon: "success",
         title: "Success!",
-        text: "Account created successfully",
+        text: "Logged in successfully",
         timer: 2000,
         showConfirmButton: false,
       });
@@ -87,21 +79,55 @@ export default function RegisterPage() {
       router.push("/");
       
     } catch (error: any) {
-      console.error("Registration error:", error);
+      console.error("Login error:", error);
       
-      if (error.code === "auth/email-already-in-use") {
+      if (error.code === "auth/invalid-credential") {
         await Swal.fire({
           icon: "error",
-          title: "Registration Failed",
-          text: "This email is already registered. Please login instead.",
-          showConfirmButton: false,
+          title: "Login Failed",
+          text: "Invalid email or password. Please try again.",
+          confirmButtonColor: "#d33",
+          confirmButtonText: "OK",
+        });
+      } else if (error.code === "auth/user-not-found") {
+        await Swal.fire({
+          icon: "error",
+          title: "Login Failed",
+          text: "No account found with this email. Please register first.",
+          confirmButtonColor: "#d33",
+          confirmButtonText: "OK",
+        });
+      } else if (error.code === "auth/wrong-password") {
+        await Swal.fire({
+          icon: "error",
+          title: "Login Failed",
+          text: "Incorrect password. Please try again.",
+          confirmButtonColor: "#d33",
+          confirmButtonText: "OK",
+        });
+      } else if (error.code === "auth/too-many-requests") {
+        await Swal.fire({
+          icon: "error",
+          title: "Login Failed",
+          text: "Too many failed attempts. Please try again later.",
+          confirmButtonColor: "#d33",
+          confirmButtonText: "OK",
+        });
+      } else if (error.code === "auth/network-request-failed") {
+        await Swal.fire({
+          icon: "error",
+          title: "Login Failed",
+          text: "Network error. Please check your internet connection.",
+          confirmButtonColor: "#d33",
+          confirmButtonText: "OK",
         });
       } else {
         await Swal.fire({
           icon: "error",
-          title: "Registration Failed",
-          text: error.message || "Failed to create account. Please try again.",
-          showConfirmButton: false,
+          title: "Login Failed",
+          text: error.message || "Failed to login. Please try again.",
+          confirmButtonColor: "#d33",
+          confirmButtonText: "OK",
         });
       }
     } finally {
@@ -109,23 +135,19 @@ export default function RegisterPage() {
     }
   };
 
-  // Google Registration
-  const handleGoogleRegister = async () => {
+  // Google Login
+  const handleGoogleLogin = async () => {
     setIsGoogleLoading(true);
     const provider = new GoogleAuthProvider();
 
     try {
       const result = await signInWithPopup(auth, provider);
       const token = await result.user.getIdToken();
+
       localStorage.setItem("token", token);
 
-      // Get name from Google
-      const googleName = result.user.displayName || "Google User";
-
-      // ✅ Send name to backend via register endpoint
-      const response = await api.post("/auth/register", {
-        token: token,
-        name: googleName
+      const response = await api.get("/auth/me", {
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       if (response.data.user) {
@@ -135,7 +157,7 @@ export default function RegisterPage() {
       await Swal.fire({
         icon: "success",
         title: "Success!",
-        text: "Google account created successfully",
+        text: "Logged in with Google successfully",
         timer: 2000,
         showConfirmButton: false,
       });
@@ -143,7 +165,7 @@ export default function RegisterPage() {
       router.push("/");
       
     } catch (error: any) {
-      console.error("Google registration error:", error);
+      console.error("Google login error:", error);
       
       if (error.code === "auth/popup-closed-by-user") {
         console.log("User closed the Google popup");
@@ -152,21 +174,16 @@ export default function RegisterPage() {
           icon: "error",
           title: "Popup Blocked",
           text: "Please allow popups for this website and try again.",
-          showConfirmButton: false,
-        });
-      } else if (error.code === "auth/account-exists-with-different-credential") {
-        await Swal.fire({
-          icon: "error",
-          title: "Account Exists",
-          text: "An account already exists with this email. Please login with your password.",
-          showConfirmButton: false,
+          confirmButtonColor: "#d33",
+          confirmButtonText: "OK",
         });
       } else {
         await Swal.fire({
           icon: "error",
-          title: "Registration Failed",
-          text: error.message || "Failed to register with Google. Please try again.",
-          showConfirmButton: false,
+          title: "Login Failed",
+          text: error.message || "Failed to login with Google. Please try again.",
+          confirmButtonColor: "#d33",
+          confirmButtonText: "OK",
         });
       }
     } finally {
@@ -181,32 +198,13 @@ export default function RegisterPage() {
         <div className="text-center space-y-2">
           <div className="flex justify-center">
             <div className="bg-blue-100 p-3 rounded-full">
-              <HiOutlineUserAdd className="text-4xl text-blue-600" />
+              <HiOutlineLogin className="text-4xl text-blue-600" />
             </div>
           </div>
           <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-            Create Account
+            Welcome Back
           </h1>
-          <p className="text-gray-500 text-sm">Join us to get started</p>
-        </div>
-
-        {/* Name Field */}
-        <div>
-          <div className="relative">
-            <FaUser className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-            <input
-              {...register("name")}
-              type="text"
-              placeholder="Full Name"
-              className={`pl-10 border ${
-                errors.name ? "border-red-500" : "border-gray-300"
-              } p-3 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all`}
-              disabled={isLoading}
-            />
-          </div>
-          {errors.name && (
-            <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>
-          )}
+          <p className="text-gray-500 text-sm">Login to your account</p>
         </div>
 
         {/* Email Field */}
@@ -254,57 +252,7 @@ export default function RegisterPage() {
           )}
         </div>
 
-        {/* Confirm Password Field */}
-        <div>
-          <div className="relative">
-            <FaLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-            <input
-              type={showConfirmPassword ? "text" : "password"}
-              {...register("confirmPassword")}
-              placeholder="Confirm Password"
-              className={`pl-10 pr-10 border ${
-                errors.confirmPassword ? "border-red-500" : "border-gray-300"
-              } p-3 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all`}
-              disabled={isLoading}
-            />
-            <button
-              type="button"
-              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-            >
-              {showConfirmPassword ? <FaEyeSlash size={18} /> : <FaEye size={18} />}
-            </button>
-          </div>
-          {errors.confirmPassword && (
-            <p className="text-red-500 text-sm mt-1">{errors.confirmPassword.message}</p>
-          )}
-        </div>
-
-        {/* Password Requirements Hint */}
-        {password && !errors.password && (
-          <div className="text-xs text-gray-500 bg-gray-50 p-3 rounded-lg">
-            <p className="font-medium mb-1">Password must have:</p>
-            <div className="grid grid-cols-2 gap-1">
-              <p className={password.length >= 8 ? "text-green-600" : ""}>
-                {password.length >= 8 ? "✅" : "❌"} 8+ characters
-              </p>
-              <p className={/[a-z]/.test(password) ? "text-green-600" : ""}>
-                {/[a-z]/.test(password) ? "✅" : "❌"} Lowercase letter
-              </p>
-              <p className={/[A-Z]/.test(password) ? "text-green-600" : ""}>
-                {/[A-Z]/.test(password) ? "✅" : "❌"} Uppercase letter
-              </p>
-              <p className={/[0-9]/.test(password) ? "text-green-600" : ""}>
-                {/[0-9]/.test(password) ? "✅" : "❌"} Number
-              </p>
-              <p className={/[@$!%*?&]/.test(password) ? "text-green-600" : ""}>
-                {/[@$!%*?&]/.test(password) ? "✅" : "❌"} Special character
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* Email Register Button */}
+        {/* Login Button */}
         <button
           type="submit"
           disabled={isLoading}
@@ -319,8 +267,8 @@ export default function RegisterPage() {
             <AiOutlineLoading3Quarters className="animate-spin text-xl" />
           ) : (
             <>
-              <HiOutlineUserAdd className="text-xl" />
-              Register
+              <HiOutlineLogin className="text-xl" />
+              Login
             </>
           )}
         </button>
@@ -335,10 +283,10 @@ export default function RegisterPage() {
           </div>
         </div>
 
-        {/* Google Register Button */}
+        {/* Google Login Button */}
         <button
           type="button"
-          onClick={handleGoogleRegister}
+          onClick={handleGoogleLogin}
           disabled={isGoogleLoading}
           className="border border-gray-300 text-gray-700 py-3 rounded-lg w-full font-semibold transition-all flex items-center justify-center gap-2 hover:bg-gray-50"
         >
@@ -346,22 +294,22 @@ export default function RegisterPage() {
             <AiOutlineLoading3Quarters className="animate-spin text-xl" />
           ) : (
             <>
-              <FcGoogle className="text-xl" />
-              Register with Google
+              <FcGoogle  className="text-xl " />
+              Login with Google
             </>
           )}
         </button>
 
-        {/* Login Link */}
+        {/* Register Link */}
         <div className="text-center text-sm text-gray-600">
-          Already have an account?{" "}
+          Don't have an account?{" "}
           <button
             type="button"
-            onClick={() => router.push("/login")}
+            onClick={() => router.push("/register")}
             className="text-blue-600 hover:text-blue-700 font-semibold hover:underline inline-flex items-center gap-1"
           >
             <FaEnvelope className="text-xs" />
-            Login here
+            Create account
           </button>
         </div>
       </form>

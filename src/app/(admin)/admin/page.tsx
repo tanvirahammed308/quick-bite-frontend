@@ -1,7 +1,7 @@
 // app/admin/products/page.tsx (Main Page)
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { 
@@ -44,7 +44,7 @@ export default function AdminProductsPage() {
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
+  
 
   // Fetch products
   useEffect(() => {
@@ -54,27 +54,34 @@ export default function AdminProductsPage() {
   }, [dispatch, user]);
 
   // Update pagination
-  useEffect(() => {
-    const filtered = getFilteredProducts();
-    setTotalPages(Math.ceil(filtered.length / ITEMS_PER_PAGE));
-    setCurrentPage(1);
-  }, [products, searchTerm, selectedCategory]);
+  const filteredProducts = useMemo(() => {
+  return products.filter(product => {
+    const matchesSearch =
+      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.description.toLowerCase().includes(searchTerm.toLowerCase());
 
-  const getFilteredProducts = () => {
-    return products.filter(product => {
-      const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            product.description.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesCategory = !selectedCategory || product.category === selectedCategory;
-      return matchesSearch && matchesCategory;
-    });
-  };
+    const matchesCategory =
+      !selectedCategory || product.category === selectedCategory;
+
+    return matchesSearch && matchesCategory;
+  });
+}, [products, searchTerm, selectedCategory]);
+
+const totalPages = Math.max(
+  1,
+  Math.ceil(filteredProducts.length / ITEMS_PER_PAGE)
+);
 
   const getPaginatedProducts = () => {
-    const filtered = getFilteredProducts();
-    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-    const endIndex = startIndex + ITEMS_PER_PAGE;
-    return filtered.slice(startIndex, endIndex);
-  };
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
+
+  return filteredProducts.slice(startIndex, endIndex);
+};
+
+  const goToPage = (page: number) => {
+  setCurrentPage(page);
+};
 
   const resetForm = () => {
     setEditingProduct(null);
@@ -175,8 +182,8 @@ export default function AdminProductsPage() {
       resetForm();
       setShowForm(false);
       dispatch(getAllProducts());
-    } catch (error: any) {
-      Swal.fire({ icon: "error", title: "Error", text: error || "Something went wrong", confirmButtonColor: "#d33" });
+    } catch (error: unknown) {
+      Swal.fire({ icon: "error", title: "Error", text: (error as Error).message || "Something went wrong", confirmButtonColor: "#d33" });
     } finally {
       setIsSubmitting(false);
     }
@@ -202,13 +209,13 @@ export default function AdminProductsPage() {
           setShowDetailsModal(false);
         }
         dispatch(getAllProducts());
-      } catch (error: any) {
-        Swal.fire({ icon: "error", title: "Error", text: error || "Failed to delete product", confirmButtonColor: "#d33" });
+      } catch (error: unknown) {
+        Swal.fire({ icon: "error", title: "Error", text: (error as Error).message || "Failed to delete product", confirmButtonColor: "#d33" });
       }
     }
   };
 
-  const filteredProducts = getFilteredProducts();
+  
   const paginatedProducts = getPaginatedProducts();
   const lowStockCount = products.filter(p => p.stock > 0 && p.stock < 10).length;
   const outOfStockCount = products.filter(p => p.stock === 0).length;

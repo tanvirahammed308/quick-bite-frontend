@@ -69,7 +69,7 @@ export default function AdminProductsPage() {
       name: "",
       description: "",
       price: 0,
-      category: "",
+      category: "Pizza",
       stock: 0,
     }
   });
@@ -96,7 +96,7 @@ export default function AdminProductsPage() {
       name: "",
       description: "",
       price: 0,
-      category: "",
+      category: "Pizza",
       stock: 0,
     });
     setImagePreview("");

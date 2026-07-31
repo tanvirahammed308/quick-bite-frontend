@@ -36,7 +36,7 @@ export default function ProductForm({
       name: "",
       description: "",
       price: 0,
-      category: "",
+      category: "Pizza",
       stock: 0,
     }
   });

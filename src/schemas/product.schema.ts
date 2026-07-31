@@ -90,7 +90,6 @@ export const productSchema = z.object({
     .min(0, "Price must be a positive number")
     .max(999999, "Price must be less than 999999"),
 
-  // এখানে পরিবর্তন
   category: z.enum(productCategories),
 
   stock: z.number()
@@ -100,3 +99,12 @@ export const productSchema = z.object({
 
   image: z.any().optional(),
 });
+
+
+export type ProductCategory = typeof productCategories[number];
+
+export type ProductFormData = z.infer<typeof productSchema>;
+
+export const updateProductSchema = productSchema.partial();
+
+export type UpdateProductFormData = z.infer<typeof updateProductSchema>;

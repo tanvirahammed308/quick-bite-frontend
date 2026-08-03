@@ -98,21 +98,21 @@ const slides = [
 ];
 
 export default function HeroSection() {
-  const swiperRef = useRef<SwiperType | null>(null);
-const [, forceUpdate] = useState({});
+  const prevRef = useRef(null);
+  const nextRef = useRef(null);
 
   return (
     <section className="relative w-full h-screen overflow-hidden">
       {/* Navigation Buttons with Icons */}
       <button
-       onClick={() => swiperRef.current?.slidePrev()}
+        ref={prevRef}
         className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 bg-red-600 hover:bg-red-700 text-white rounded-full flex items-center justify-center shadow-lg transition-all duration-300 hover:scale-110 cursor-pointer"
         aria-label="Previous slide"
       >
         <FaChevronLeft size={20} />
       </button>
       <button
-       onClick={() => swiperRef.current?.slideNext()}
+        ref={nextRef}
         className="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 bg-red-600 hover:bg-red-700 text-white rounded-full flex items-center justify-center shadow-lg transition-all duration-300 hover:scale-110 cursor-pointer"
         aria-label="Next slide"
       >
@@ -120,18 +120,22 @@ const [, forceUpdate] = useState({});
       </button>
 
       <Swiper
-        modules={[Autoplay, Pagination]}
+        modules={[Autoplay, Pagination, Navigation]}
         spaceBetween={0}
         slidesPerView={1}
         autoplay={{ delay: 5000, disableOnInteraction: false }}
         pagination={{ clickable: true, dynamicBullets: true }}
-       
+        navigation={{ prevEl: prevRef.current, nextEl: nextRef.current }}
         loop={true}
         className="w-full h-full"
-        onSwiper={(swiper) => {
-  swiperRef.current = swiper;
-  forceUpdate({});
-}}
+        onInit={(swiper) => {
+          // @ts-ignore
+          swiper.params.navigation.prevEl = prevRef.current;
+          // @ts-ignore
+          swiper.params.navigation.nextEl = nextRef.current;
+          swiper.navigation.init();
+          swiper.navigation.update();
+        }}
       >
         {slides.map((slide, idx) => (
           <SwiperSlide key={slide.id}>

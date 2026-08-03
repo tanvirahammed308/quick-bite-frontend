@@ -58,7 +58,7 @@ export default function HappyHourSection() {
 
             {/* Title - Responsive font sizes */}
             <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-800 mb-3 md:mb-4">
-              LET'S <span className="text-red-600">HAPPY HOUR!</span>
+              LET US <span className="text-red-600">HAPPY HOUR!</span>
             </h2>
 
             {/* Description - Responsive text */}

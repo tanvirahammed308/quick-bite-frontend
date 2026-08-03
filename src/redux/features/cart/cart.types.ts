@@ -1,7 +1,8 @@
+import { IProduct } from "../product/product.types";
 
 
 export interface ICartItem {
-  product: string;
+  product: string | IProduct;
   name: string;
   image: string;
   price: number;

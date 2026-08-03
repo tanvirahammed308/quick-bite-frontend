@@ -40,32 +40,24 @@ export default function CartPage() {
 
   // Helper function to safely get product ID as string
   const getProductId = (item: ICartItem): string => {
-    if (!item.product) return `item-${Date.now()}-${Math.random()}`;
-    
-    // If product is already a string, return it
-    if (typeof item.product === 'string') {
-      return item.product;
+  if (!item.product) {
+    return item.name;
+  }
+
+  if (typeof item.product === "string") {
+    return item.product;
+  }
+
+  if (typeof item.product === "object") {
+    if ("_id" in item.product) {
+      return String(item.product._id);
     }
+
     
-    // If product is an object with _id
-    if (typeof item.product === 'object' && item.product !== null) {
-      // Check if it has _id property
-      const productObj = item.product as any;
-      if (productObj._id && typeof productObj._id === 'string') {
-        return productObj._id;
-      }
-      if (productObj.id && typeof productObj.id === 'string') {
-        return productObj.id;
-      }
-      // If it's a MongoDB ObjectId with toString method
-      if (typeof productObj.toString === 'function') {
-        return productObj.toString();
-      }
-    }
-    
-    // Fallback: use name + index to create unique key
-    return `${item.name}-${Date.now()}-${Math.random()}`;
-  };
+  }
+
+  return item.name;
+};
 
   const handleUpdateQuantity = async (productId: string, newQuantity: number) => {
     if (newQuantity < 1) {
@@ -77,15 +69,22 @@ export default function CartPage() {
     try {
       await dispatch(updateCartItem({ productId, quantity: newQuantity })).unwrap();
       await dispatch(getCart()).unwrap();
-    } catch (error: any) {
-      console.error("Update error:", error);
-      Swal.fire({
-        icon: "error",
-        title: "Update Failed",
-        text: error?.message || "Failed to update quantity",
-        confirmButtonColor: "#dc2626",
-      });
-    } finally {
+    } catch (error: unknown) {
+  console.error("Remove error:", error);
+
+  let message = "Failed to remove item";
+
+  if (error instanceof Error) {
+    message = error.message;
+  }
+
+  Swal.fire({
+    icon: "error",
+    title: "Error",
+    text: message,
+    confirmButtonColor: "#dc2626",
+  });
+} finally {
       setUpdatingItems((prev) => ({ ...prev, [productId]: false }));
     }
   };
@@ -112,15 +111,22 @@ export default function CartPage() {
           timer: 1500,
           showConfirmButton: false,
         });
-      } catch (error: any) {
-        console.error("Remove error:", error);
-        Swal.fire({
-          icon: "error",
-          title: "Error",
-          text: error?.message || "Failed to remove item",
-          confirmButtonColor: "#dc2626",
-        });
-      }
+      }catch (error: unknown) {
+  console.error("Remove error:", error);
+
+  let message = "Failed to remove item";
+
+  if (error instanceof Error) {
+    message = error.message;
+  }
+
+  Swal.fire({
+    icon: "error",
+    title: "Error",
+    text: message,
+    confirmButtonColor: "#dc2626",
+  });
+}
     }
   };
 
@@ -146,20 +152,27 @@ export default function CartPage() {
           timer: 1500,
           showConfirmButton: false,
         });
-      } catch (error: any) {
-        console.error("Clear error:", error);
-        Swal.fire({
-          icon: "error",
-          title: "Error",
-          text: error?.message || "Failed to clear cart",
-          confirmButtonColor: "#dc2626",
-        });
-      }
+      } catch (error: unknown) {
+  console.error("Remove error:", error);
+
+  let message = "Failed to remove item";
+
+  if (error instanceof Error) {
+    message = error.message;
+  }
+
+  Swal.fire({
+    icon: "error",
+    title: "Error",
+    text: message,
+    confirmButtonColor: "#dc2626",
+  });
+}
     }
   };
 
   const handleCheckout = () => {
-    router.push("/checkout");
+    router.push("/payment");
   };
 
   const handleContinueShopping = () => {
@@ -190,7 +203,7 @@ export default function CartPage() {
           <div className="bg-white rounded-3xl shadow-xl p-12">
             <div className="text-8xl mb-6">🛒</div>
             <h2 className="text-3xl font-bold text-gray-800 mb-3">Your cart is empty</h2>
-            <p className="text-gray-500 mb-8">Looks like you haven't added any items yet</p>
+            <p className="text-gray-500 mb-8">Looks like you have not added any items yet</p>
             <Link
               href="/menu"
               className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition duration-300"

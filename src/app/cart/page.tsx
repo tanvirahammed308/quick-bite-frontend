@@ -395,7 +395,7 @@ export default function CartPage() {
                   className="w-full bg-gradient-to-r from-red-600 to-red-500 text-white py-3.5 rounded-xl font-semibold hover:from-red-700 hover:to-red-600 transition-all duration-300 shadow-lg flex items-center justify-center gap-2"
                 >
                   <FaLock size={16} />
-                  Proceed to Checkout
+                  Proceed to Payment
                 </button>
                 <button
                   onClick={handleContinueShopping}

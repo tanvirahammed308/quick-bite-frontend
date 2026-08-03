@@ -28,7 +28,7 @@ export default function CheckoutForm() {
       elements,
       confirmParams: {
         return_url:
-          "http://localhost:3000/payment-success",
+          "https://red-chili-backend-chi.vercel.app/payment-success",
       },
     });
 

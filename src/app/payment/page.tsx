@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from "react";
 
-import CheckoutForm from "@/components/payment/CheckoutForm";
+
 
 import api from "@/lib/axios";
 import StripeProvider from "@/redux/providers/StripeProvider";
+import CheckoutForm from "@/components/payment/CheckoutForm";
 
 export default function PaymentPage() {
   const [clientSecret, setClientSecret] = useState("");

@@ -2,9 +2,7 @@
 "use client";
 
 import { FaUtensils, FaTruck, FaTemperatureHigh, FaRedoAlt } from "react-icons/fa";
-import { MdRestaurantMenu, MdDeliveryDining, MdLocalFireDepartment, MdRepeat } from "react-icons/md";
-import Image from "next/image";
-import Link from "next/link";
+
 
 export default function HowItWorksSection() {
   const steps = [
@@ -50,7 +48,7 @@ export default function HowItWorksSection() {
   ];
 
   return (
-    <section className="py-16 bg-gradient-to-br from-gray-50 to-white">
+    <section className="py-16 bg-linear-to-br from-gray-50 to-white">
       <div className="container mx-auto px-4">
         {/* Section Header */}
         <div className="text-center mb-12">

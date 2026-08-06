@@ -1,242 +1,125 @@
-"use client";
+// CART BUTTON
+//       {showCart && cartItemCount > 0 && (
+//         <button
+//           onClick={() => setShowCartSidebar(true)}
+//           className="fixed bottom-6 right-6 bg-red-600 text-white p-3 rounded-full shadow-lg hover:bg-red-700 transition flex items-center gap-2 z-40"
+//         >
+//           <FiShoppingCart size={20} />
+//           <span className="bg-white text-red-600 rounded-full w-5 h-5 text-xs flex items-center justify-center font-bold">
+//             {cartItemCount}
+//           </span>
+//         </button>
+//       )}
 
-import { useRef, useState } from "react";
-import type { Swiper as SwiperType } from "swiper";
-import { Swiper, SwiperSlide } from "swiper/react";
-import { Autoplay, Pagination, Navigation } from "swiper/modules";
-import Image from "next/image";
-import Link from "next/link";
-import { 
-  FaShoppingCart, 
-  FaArrowRight, 
-  FaStar, 
-  FaTruck, 
-  FaClock, 
-  FaUtensils,
-  FaChevronLeft,
-  FaChevronRight
-} from "react-icons/fa";
-import { MdRestaurantMenu } from "react-icons/md";
+//       {/* CART SIDEBAR */}
+//       {showCartSidebar && (
+//         <>
+//           <div
+//             className="fixed inset-0 bg-black/50 z-50"
+//             onClick={() => setShowCartSidebar(false)}
+//           />
 
-import "swiper/css";
-import "swiper/css/pagination";
-import "swiper/css/navigation";
+//           <div className="fixed right-0 top-0 w-full sm:w-96 h-full bg-white shadow-2xl z-50 flex flex-col">
+//             {/* Header */}
+//             <div className="p-4 border-b flex justify-between items-center bg-red-600 text-white rounded-tl-2xl">
+//               <h2 className="text-xl font-bold flex items-center gap-2">
+//                 <FiShoppingCart />
+//                 Your Cart ({cartItemCount})
+//               </h2>
+//               <button
+//                 onClick={() => setShowCartSidebar(false)}
+//                 className="p-1 hover:bg-white/20 rounded-lg transition"
+//               >
+//                 <FiX size={24} />
+//               </button>
+//             </div>
 
-const slides = [
-  {
-    id: 1,
-    title: "Butter Chicken",
-    subtitle: "Creamy & Spicy Delight",
-    description: "Experience rich, creamy butter chicken with authentic Indian spices",
-    image: "/images/hero/hero1.jpg",
-    price: "$14.99",
-    rating: 4.8,
-    reviews: 2340,
-    time: "20-25 min",
-    tag: "🔥 Popular"
-  },
-  {
-    id: 2,
-    title: "Royal Biryani",
-    subtitle: "Fragrant Rice Masterpiece",
-    description: "Aromatic basmati rice with tender meat and exotic spices",
-    image: "/images/hero/hero2.jpg",
-    price: "$16.99",
-    rating: 4.9,
-    reviews: 1850,
-    time: "25-30 min",
-    tag: "👑 Chef's Special"
-  },
-  {
-    id: 3,
-    title: "Wood Fired Pizza",
-    subtitle: "Italian Classic",
-    description: "Authentic wood-fired pizza with fresh mozzarella and basil",
-    image: "/images/hero/hero3.png",
-    price: "$18.99",
-    rating: 4.7,
-    reviews: 3120,
-    time: "15-20 min",
-    tag: "🍕 Best Seller"
-  },
-  {
-    id: 4,
-    title: "Grilled Burger",
-    subtitle: "Juicy & Smoky",
-    description: "Premium Angus beef patty with cheese, lettuce, and our secret sauce",
-    image: "/images/hero/hero4.jpg",
-    price: "$12.99",
-    rating: 4.8,
-    reviews: 2780,
-    time: "15-20 min",
-    tag: "🍔 New Arrival"
-  },
-  {
-    id: 5,
-    title: "Pasta Alfredo",
-    subtitle: "Creamy & Cheesy",
-    description: "Silky fettuccine pasta tossed in rich, creamy Alfredo sauce",
-    image: "/images/hero/hero5.png",
-    price: "$15.99",
-    rating: 4.6,
-    reviews: 1950,
-    time: "20-25 min",
-    tag: "🌿 Vegetarian"
-  },
-  {
-    id: 6,
-    title: "Seafood Platter",
-    subtitle: "Fresh & Tasty",
-    description: "Delightful selection of fresh grilled seafood with lemon butter sauce",
-    image: "/images/hero/hero6.png",
-    price: "$24.99",
-    rating: 4.9,
-    reviews: 1670,
-    time: "25-30 min",
-    tag: "🦞 Chef's Special"
-  }
-];
+//             {/* Cart Items */}
+//             <div className="flex-1 overflow-y-auto p-4 space-y-3">
+//               {!cart || cart.items.length === 0 ? (
+//                 <div className="text-center py-12">
+//                   <div className="text-6xl mb-4">🛒</div>
+//                   <p className="text-gray-500">Your cart is empty</p>
+//                   <button
+//                     onClick={() => setShowCartSidebar(false)}
+//                     className="mt-4 text-red-600 hover:underline"
+//                   >
+//                     Continue Shopping
+//                   </button>
+//                 </div>
+//               ) : (
+//                 cart.items.map((item: ICartItem) => (
+//                   <div key={item.product} className="flex gap-3 p-3 bg-gray-50 rounded-lg">
+//                     <img
+//                       src={item.image}
+//                       alt={item.name}
+//                       className="w-16 h-16 rounded-lg object-cover"
+//                     />
+//                     <div className="flex-1">
+//                       <h4 className="font-semibold text-gray-800">{item.name}</h4>
+//                       <p className="text-red-600 font-bold text-sm">
+//                         ${item.price.toFixed(2)}
+//                       </p>
+//                       <div className="flex items-center gap-3 mt-1">
+//                         <button
+//                           onClick={() => handleUpdateCartQuantity(item.product, item.quantity - 1)}
+//                           disabled={updatingItems[item.product]}
+//                           className="w-6 h-6 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 disabled:opacity-50"
+//                         >
+//                           <FaMinus size={10} />
+//                         </button>
+//                         <span className="text-sm font-medium">
+//                           {updatingItems[item.product] ? (
+//                             <div className="w-3 h-3 border-2 border-red-600 border-t-transparent rounded-full animate-spin"></div>
+//                           ) : (
+//                             item.quantity
+//                           )}
+//                         </span>
+//                         <button
+//                           onClick={() => handleUpdateCartQuantity(item.product, item.quantity + 1)}
+//                           disabled={updatingItems[item.product]}
+//                           className="w-6 h-6 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 disabled:opacity-50"
+//                         >
+//                           <FaPlus size={10} />
+//                         </button>
+//                         <button
+//                           onClick={() => handleRemoveFromCart(item.product)}
+//                           className="text-red-500 text-xs hover:underline ml-auto"
+//                         >
+//                           Remove
+//                         </button>
+//                       </div>
+//                     </div>
+//                   </div>
+//                 ))
+//               )}
+//             </div>
 
-export default function HeroSection() {
-  const prevRef = useRef(null);
-  const nextRef = useRef(null);
-
-  return (
-    <section className="relative w-full h-screen overflow-hidden">
-      {/* Navigation Buttons with Icons */}
-      <button
-        ref={prevRef}
-        className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 bg-red-600 hover:bg-red-700 text-white rounded-full flex items-center justify-center shadow-lg transition-all duration-300 hover:scale-110 cursor-pointer"
-        aria-label="Previous slide"
-      >
-        <FaChevronLeft size={20} />
-      </button>
-      <button
-        ref={nextRef}
-        className="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 bg-red-600 hover:bg-red-700 text-white rounded-full flex items-center justify-center shadow-lg transition-all duration-300 hover:scale-110 cursor-pointer"
-        aria-label="Next slide"
-      >
-        <FaChevronRight size={20} />
-      </button>
-
-      <Swiper
-        modules={[Autoplay, Pagination, Navigation]}
-        spaceBetween={0}
-        slidesPerView={1}
-        autoplay={{ delay: 5000, disableOnInteraction: false }}
-        pagination={{ clickable: true, dynamicBullets: true }}
-        navigation={{ prevEl: prevRef.current, nextEl: nextRef.current }}
-        loop={true}
-        className="w-full h-full"
-        onInit={(swiper) => {
-          // @ts-ignore
-          swiper.params.navigation.prevEl = prevRef.current;
-          // @ts-ignore
-          swiper.params.navigation.nextEl = nextRef.current;
-          swiper.navigation.init();
-          swiper.navigation.update();
-        }}
-      >
-        {slides.map((slide, idx) => (
-          <SwiperSlide key={slide.id}>
-            <div className="relative w-full h-screen">
-              {/* Background Image */}
-              <Image
-                src={slide.image}
-                alt={slide.title}
-                fill
-                className="object-cover"
-                priority={idx === 0}
-              />
-              
-              {/* Dark Overlay */}
-              <div className="absolute inset-0 bg-black/50"></div>
-
-              {/* Content */}
-              <div className="relative z-10 h-full flex flex-col items-center justify-center text-center px-4">
-                <div className="max-w-2xl mx-auto">
-                  {/* Tag */}
-                  <span className="inline-block bg-red-600 text-white text-xs px-3 py-1 rounded-full mb-3">
-                    {slide.tag}
-                  </span>
-
-                  {/* Title */}
-                  <h1 className="text-4xl md:text-5xl font-bold text-white mb-2">
-                    {slide.title}
-                  </h1>
-                  
-                  {/* Subtitle */}
-                  <p className="text-red-500 text-lg md:text-xl font-semibold mb-3">
-                    {slide.subtitle}
-                  </p>
-
-                  {/* Description */}
-                  <p className="text-gray-200 text-sm md:text-base mb-5 max-w-lg mx-auto">
-                    {slide.description}
-                  </p>
-
-                  {/* Rating & Time */}
-                  <div className="flex items-center justify-center gap-4 mb-5">
-                    <div className="flex items-center gap-1">
-                      {[...Array(5)].map((_, i) => (
-                        <FaStar key={i} className="text-yellow-500 text-xs" />
-                      ))}
-                      <span className="text-white/70 text-xs ml-1">{slide.rating}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <FaClock className="text-red-500 text-xs" />
-                      <span className="text-white/70 text-xs">{slide.time}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <FaTruck className="text-red-500 text-xs" />
-                      <span className="text-white/70 text-xs">Free Delivery</span>
-                    </div>
-                  </div>
-
-                  {/* Price */}
-                  <div className="text-center mb-4">
-                    <span className="text-3xl font-bold text-red-500">{slide.price}</span>
-                    <span className="text-gray-300 text-sm ml-1">+ free delivery</span>
-                  </div>
-
-                  {/* Buttons with Icons */}
-                  <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-                    <Link
-                      href="/order-now"
-                      className="flex items-center gap-2 px-5 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold text-sm transition duration-300 hover:scale-105"
-                    >
-                      <FaShoppingCart size={16} />
-                      Order Now
-                    </Link>
-                    <Link
-                      href="/menu"
-                      className="flex items-center gap-2 px-5 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg font-semibold text-sm transition duration-300 group"
-                    >
-                      <MdRestaurantMenu size={16} />
-                      View Menu
-                      <FaArrowRight className="group-hover:translate-x-1 transition-transform" size={12} />
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </SwiperSlide>
-        ))}
-      </Swiper>
-
-      <style jsx global>{`
-        .swiper-pagination-bullet {
-          background: white !important;
-          opacity: 0.5;
-        }
-        .swiper-pagination-bullet-active {
-          background: #dc2626 !important;
-          opacity: 1;
-        }
-        .swiper-pagination {
-          bottom: 20px !important;
-        }
-      `}</style>
-    </section>
-  );
-}
+//             {/* Footer */}
+//             {cart && cart.items.length > 0 && (
+//               <div className="p-4 border-t bg-gray-50">
+//                 <div className="flex justify-between mb-3">
+//                   <span className="font-semibold">Subtotal:</span>
+//                   <span className="font-bold text-red-600">${cartTotal.toFixed(2)}</span>
+//                 </div>
+//                 <div className="flex justify-between text-sm text-gray-500 mb-4">
+//                   <span>Delivery Fee:</span>
+//                   <span>Free</span>
+//                 </div>
+//                 <button
+//                   onClick={() => router.push("/checkout")}
+//                   className="w-full bg-red-600 text-white py-3 rounded-lg font-semibold hover:bg-red-700 transition"
+//                 >
+//                   Proceed to Checkout
+//                 </button>
+//                 <button
+//                   onClick={handleClearCart}
+//                   className="w-full mt-2 text-red-600 text-sm hover:underline"
+//                 >
+//                   Clear Cart
+//                 </button>
+//               </div>
+//             )}
+//           </div>
+//         </>
+//       )}

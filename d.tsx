@@ -1,125 +1,413 @@
-// CART BUTTON
-//       {showCart && cartItemCount > 0 && (
-//         <button
-//           onClick={() => setShowCartSidebar(true)}
-//           className="fixed bottom-6 right-6 bg-red-600 text-white p-3 rounded-full shadow-lg hover:bg-red-700 transition flex items-center gap-2 z-40"
-//         >
-//           <FiShoppingCart size={20} />
-//           <span className="bg-white text-red-600 rounded-full w-5 h-5 text-xs flex items-center justify-center font-bold">
-//             {cartItemCount}
-//           </span>
-//         </button>
-//       )}
+// // app/cart/page.tsx
+// "use client";
 
-//       {/* CART SIDEBAR */}
-//       {showCartSidebar && (
-//         <>
-//           <div
-//             className="fixed inset-0 bg-black/50 z-50"
-//             onClick={() => setShowCartSidebar(false)}
-//           />
+// import { useEffect, useState } from "react";
+// import { useRouter } from "next/navigation";
+// import Image from "next/image";
+// import Link from "next/link";
+// import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+// import {
+//   getCart,
+//   updateCartItem,
+//   removeCartItem,
+//   clearCart,
+// } from "@/redux/features/cart/cart.slice";
+// import { FaTrash, FaArrowLeft, FaPlus, FaMinus, FaLock, FaTruck, FaShieldAlt } from "react-icons/fa";
+// import Swal from "sweetalert2";
+// import type { ICartItem } from "@/redux/features/cart/cart.types";
 
-//           <div className="fixed right-0 top-0 w-full sm:w-96 h-full bg-white shadow-2xl z-50 flex flex-col">
-//             {/* Header */}
-//             <div className="p-4 border-b flex justify-between items-center bg-red-600 text-white rounded-tl-2xl">
-//               <h2 className="text-xl font-bold flex items-center gap-2">
-//                 <FiShoppingCart />
-//                 Your Cart ({cartItemCount})
-//               </h2>
-//               <button
-//                 onClick={() => setShowCartSidebar(false)}
-//                 className="p-1 hover:bg-white/20 rounded-lg transition"
-//               >
-//                 <FiX size={24} />
-//               </button>
+// export default function CartPage() {
+//   const router = useRouter();
+//   const dispatch = useAppDispatch();
+  
+//   const { cart } = useAppSelector((state) => state.cart);
+//   const { currentUser, loading: authLoading } = useAppSelector((state) => state.auth);
+  
+//   const [updatingItems, setUpdatingItems] = useState<Record<string, boolean>>({});
+//   const [isLoading, setIsLoading] = useState(true);
+
+//   useEffect(() => {
+//     if (!authLoading) {
+//       if (!currentUser) {
+//         router.replace("/login?redirect=/cart");
+//       } else {
+//         dispatch(getCart()).finally(() => {
+//           setIsLoading(false);
+//         });
+//       }
+//     }
+//   }, [currentUser, authLoading, dispatch, router]);
+
+//   // Helper function to safely get product ID as string
+//   const getProductId = (item: ICartItem): string => {
+//   if (!item.product) {
+//     return item.name;
+//   }
+
+//   if (typeof item.product === "string") {
+//     return item.product;
+//   }
+
+//   if (typeof item.product === "object") {
+//     if ("_id" in item.product) {
+//       return String(item.product._id);
+//     }
+
+    
+//   }
+
+//   return item.name;
+// };
+
+//   const handleUpdateQuantity = async (productId: string, newQuantity: number) => {
+//     if (newQuantity < 1) {
+//       handleRemoveItem(productId);
+//       return;
+//     }
+
+//     setUpdatingItems((prev) => ({ ...prev, [productId]: true }));
+//     try {
+//       await dispatch(updateCartItem({ productId, quantity: newQuantity })).unwrap();
+//       await dispatch(getCart()).unwrap();
+//     } catch (error: unknown) {
+//   console.error("Remove error:", error);
+
+//   let message = "Failed to remove item";
+
+//   if (error instanceof Error) {
+//     message = error.message;
+//   }
+
+//   Swal.fire({
+//     icon: "error",
+//     title: "Error",
+//     text: message,
+//     confirmButtonColor: "#dc2626",
+//   });
+// } finally {
+//       setUpdatingItems((prev) => ({ ...prev, [productId]: false }));
+//     }
+//   };
+
+//   const handleRemoveItem = async (productId: string) => {
+//     const result = await Swal.fire({
+//       title: "Remove Item?",
+//       text: "Are you sure you want to remove this item?",
+//       icon: "warning",
+//       showCancelButton: true,
+//       confirmButtonColor: "#dc2626",
+//       cancelButtonColor: "#6b7280",
+//       confirmButtonText: "Yes, Remove",
+//       cancelButtonText: "Cancel",
+//     });
+
+//     if (result.isConfirmed) {
+//       try {
+//         await dispatch(removeCartItem(productId)).unwrap();
+//         await dispatch(getCart()).unwrap();
+//         Swal.fire({
+//           icon: "success",
+//           title: "Removed!",
+//           timer: 1500,
+//           showConfirmButton: false,
+//         });
+//       }catch (error: unknown) {
+//   console.error("Remove error:", error);
+
+//   let message = "Failed to remove item";
+
+//   if (error instanceof Error) {
+//     message = error.message;
+//   }
+
+//   Swal.fire({
+//     icon: "error",
+//     title: "Error",
+//     text: message,
+//     confirmButtonColor: "#dc2626",
+//   });
+// }
+//     }
+//   };
+
+//   const handleClearCart = async () => {
+//     const result = await Swal.fire({
+//       title: "Clear Cart?",
+//       text: "Are you sure you want to clear your entire cart?",
+//       icon: "warning",
+//       showCancelButton: true,
+//       confirmButtonColor: "#dc2626",
+//       cancelButtonColor: "#6b7280",
+//       confirmButtonText: "Yes, Clear All",
+//       cancelButtonText: "Cancel",
+//     });
+
+//     if (result.isConfirmed) {
+//       try {
+//         await dispatch(clearCart()).unwrap();
+//         await dispatch(getCart()).unwrap();
+//         Swal.fire({
+//           icon: "success",
+//           title: "Cleared!",
+//           timer: 1500,
+//           showConfirmButton: false,
+//         });
+//       } catch (error: unknown) {
+//   console.error("Remove error:", error);
+
+//   let message = "Failed to remove item";
+
+//   if (error instanceof Error) {
+//     message = error.message;
+//   }
+
+//   Swal.fire({
+//     icon: "error",
+//     title: "Error",
+//     text: message,
+//     confirmButtonColor: "#dc2626",
+//   });
+// }
+//     }
+//   };
+
+//   const handleCheckout = () => {
+//     router.push("/payment");
+//   };
+
+//   const handleContinueShopping = () => {
+//     router.push("/menu");
+//   };
+
+//   if (authLoading || isLoading) {
+//     return (
+//       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
+//         <div className="text-center">
+//           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto"></div>
+//           <p className="mt-4 text-gray-600">Loading your cart...</p>
+//         </div>
+//       </div>
+//     );
+//   }
+
+//   if (!currentUser) {
+//     return null;
+//   }
+
+//   const hasValidCart = cart && Array.isArray(cart.items) && cart.items.length > 0;
+  
+//   if (!hasValidCart) {
+//     return (
+//       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-12 px-4">
+//         <div className="max-w-4xl mx-auto text-center">
+//           <div className="bg-white rounded-3xl shadow-xl p-12">
+//             <div className="text-8xl mb-6">🛒</div>
+//             <h2 className="text-3xl font-bold text-gray-800 mb-3">Your cart is empty</h2>
+//             <p className="text-gray-500 mb-8">Looks like you have not added any items yet</p>
+//             <Link
+//               href="/menu"
+//               className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition duration-300"
+//             >
+//               <FaArrowLeft />
+//               Browse Menu
+//             </Link>
+//           </div>
+//         </div>
+//       </div>
+//     );
+//   }
+
+//   const subtotal = cart.totalPrice ?? 0;
+//   const tax = Number((subtotal * 0.1).toFixed(2));
+//   const deliveryFee = subtotal >= 30 ? 0 : 5.99;
+//   const total = Number((subtotal + tax + deliveryFee).toFixed(2));
+//   const totalItems = cart.totalItems ?? 0;
+
+//   return (
+//     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8 px-4">
+//       <div className="max-w-7xl mx-auto">
+//         {/* Header */}
+//         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+//           <div className="flex items-center gap-3">
+//             <button
+//               onClick={handleContinueShopping}
+//               className="p-2 rounded-full bg-white shadow-md hover:shadow-lg transition group"
+//             >
+//               <FaArrowLeft className="text-gray-600 group-hover:text-red-600 transition" />
+//             </button>
+//             <div>
+//               <h1 className="text-3xl font-bold text-gray-800">Your Cart</h1>
+//               <p className="text-gray-500 text-sm mt-1">
+//                 {totalItems} {totalItems === 1 ? "item" : "items"}
+//               </p>
 //             </div>
+//           </div>
+//           {cart.items.length > 0 && (
+//             <button
+//               onClick={handleClearCart}
+//               className="text-red-600 hover:text-red-700 text-sm flex items-center gap-1 px-4 py-2 rounded-lg border border-red-200 hover:bg-red-50 transition"
+//             >
+//               <FaTrash size={14} />
+//               Clear All
+//             </button>
+//           )}
+//         </div>
 
-//             {/* Cart Items */}
-//             <div className="flex-1 overflow-y-auto p-4 space-y-3">
-//               {!cart || cart.items.length === 0 ? (
-//                 <div className="text-center py-12">
-//                   <div className="text-6xl mb-4">🛒</div>
-//                   <p className="text-gray-500">Your cart is empty</p>
-//                   <button
-//                     onClick={() => setShowCartSidebar(false)}
-//                     className="mt-4 text-red-600 hover:underline"
-//                   >
-//                     Continue Shopping
-//                   </button>
-//                 </div>
-//               ) : (
-//                 cart.items.map((item: ICartItem) => (
-//                   <div key={item.product} className="flex gap-3 p-3 bg-gray-50 rounded-lg">
-//                     <img
-//                       src={item.image}
-//                       alt={item.name}
-//                       className="w-16 h-16 rounded-lg object-cover"
-//                     />
-//                     <div className="flex-1">
-//                       <h4 className="font-semibold text-gray-800">{item.name}</h4>
-//                       <p className="text-red-600 font-bold text-sm">
-//                         ${item.price.toFixed(2)}
-//                       </p>
-//                       <div className="flex items-center gap-3 mt-1">
+//         <div className="grid lg:grid-cols-3 gap-8">
+//           {/* Cart Items */}
+//           <div className="lg:col-span-2 space-y-4">
+//             {cart.items.map((item: ICartItem) => {
+//               const itemPrice = item.price;
+//               const itemQuantity = item.quantity;
+//               const itemTotal = itemPrice * itemQuantity;
+//               // Safely get product ID
+//               const productId = getProductId(item);
+              
+//               return (
+//                 <div
+//                   key={productId}
+//                   className="bg-white rounded-2xl shadow-md p-4 flex gap-4 hover:shadow-xl transition-all duration-300 group"
+//                 >
+//                   <div className="relative w-24 h-24 sm:w-28 sm:h-28 bg-gray-100 rounded-xl overflow-hidden flex-shrink-0">
+//                     {item.image ? (
+//                       <Image
+//                         src={item.image}
+//                         alt={item.name}
+//                         fill
+//                         className="object-cover group-hover:scale-110 transition-transform duration-300"
+//                         sizes="(max-width: 640px) 96px, 112px"
+//                       />
+//                     ) : (
+//                       <div className="w-full h-full flex items-center justify-center text-gray-400">
+//                         <span className="text-3xl">🛒</span>
+//                       </div>
+//                     )}
+//                   </div>
+
+//                   <div className="flex-1">
+//                     <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
+//                       <div>
+//                         <h3 className="font-semibold text-gray-800 text-lg">{item.name}</h3>
+//                         <p className="text-gray-500 text-sm">
+//                           ${itemPrice.toFixed(2)} each
+//                         </p>
+//                       </div>
+//                       <button
+//                         onClick={() => handleRemoveItem(productId)}
+//                         disabled={updatingItems[productId]}
+//                         className="text-gray-400 hover:text-red-500 transition self-start disabled:opacity-50"
+//                       >
+//                         <FaTrash size={16} />
+//                       </button>
+//                     </div>
+
+//                     <div className="flex items-center justify-between mt-4">
+//                       <div className="flex items-center gap-3">
 //                         <button
-//                           onClick={() => handleUpdateCartQuantity(item.product, item.quantity - 1)}
-//                           disabled={updatingItems[item.product]}
-//                           className="w-6 h-6 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 disabled:opacity-50"
+//                           onClick={() => handleUpdateQuantity(productId, itemQuantity - 1)}
+//                           disabled={updatingItems[productId]}
+//                           className="w-8 h-8 rounded-full border-2 border-gray-300 flex items-center justify-center hover:border-red-400 hover:bg-red-50 disabled:opacity-50 transition-all duration-200"
 //                         >
-//                           <FaMinus size={10} />
+//                           <FaMinus size={12} className="text-gray-600" />
 //                         </button>
-//                         <span className="text-sm font-medium">
-//                           {updatingItems[item.product] ? (
-//                             <div className="w-3 h-3 border-2 border-red-600 border-t-transparent rounded-full animate-spin"></div>
+//                         <span className="text-gray-800 font-semibold w-8 text-center">
+//                           {updatingItems[productId] ? (
+//                             <div className="w-4 h-4 border-2 border-red-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
 //                           ) : (
-//                             item.quantity
+//                             itemQuantity
 //                           )}
 //                         </span>
 //                         <button
-//                           onClick={() => handleUpdateCartQuantity(item.product, item.quantity + 1)}
-//                           disabled={updatingItems[item.product]}
-//                           className="w-6 h-6 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 disabled:opacity-50"
+//                           onClick={() => handleUpdateQuantity(productId, itemQuantity + 1)}
+//                           disabled={updatingItems[productId]}
+//                           className="w-8 h-8 rounded-full border-2 border-gray-300 flex items-center justify-center hover:border-red-400 hover:bg-red-50 disabled:opacity-50 transition-all duration-200"
 //                         >
-//                           <FaPlus size={10} />
-//                         </button>
-//                         <button
-//                           onClick={() => handleRemoveFromCart(item.product)}
-//                           className="text-red-500 text-xs hover:underline ml-auto"
-//                         >
-//                           Remove
+//                           <FaPlus size={12} className="text-gray-600" />
 //                         </button>
 //                       </div>
+//                       <p className="font-bold text-red-600 text-lg">
+//                         ${itemTotal.toFixed(2)}
+//                       </p>
 //                     </div>
 //                   </div>
-//                 ))
-//               )}
-//             </div>
+//                 </div>
+//               );
+//             })}
+//           </div>
 
-//             {/* Footer */}
-//             {cart && cart.items.length > 0 && (
-//               <div className="p-4 border-t bg-gray-50">
-//                 <div className="flex justify-between mb-3">
-//                   <span className="font-semibold">Subtotal:</span>
-//                   <span className="font-bold text-red-600">${cartTotal.toFixed(2)}</span>
+//           {/* Order Summary */}
+//           <div className="lg:col-span-1">
+//             <div className="bg-white rounded-2xl shadow-md p-6 sticky top-20">
+//               <h2 className="text-xl font-bold text-gray-800 mb-4 pb-3 border-b">Order Summary</h2>
+
+//               <div className="flex justify-between py-3">
+//                 <span className="text-gray-600">Subtotal</span>
+//                 <span className="font-semibold">${subtotal.toFixed(2)}</span>
+//               </div>
+
+//               <div className="flex justify-between py-3 border-t">
+//                 <span className="text-gray-600">Delivery Fee</span>
+//                 <span className={deliveryFee === 0 ? "text-green-600 font-semibold" : "font-semibold"}>
+//                   {deliveryFee === 0 ? "Free" : `$${deliveryFee.toFixed(2)}`}
+//                 </span>
+//               </div>
+
+//               <div className="flex justify-between py-3 border-t">
+//                 <span className="text-gray-600">Tax (10%)</span>
+//                 <span className="font-semibold">${tax.toFixed(2)}</span>
+//               </div>
+
+//               <div className="flex justify-between py-4 border-t-2 mt-2">
+//                 <span className="text-xl font-bold text-gray-800">Total</span>
+//                 <span className="text-2xl font-bold text-red-600">
+//                   ${total.toFixed(2)}
+//                 </span>
+//               </div>
+
+//               {subtotal < 30 && (
+//                 <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+//                   <p className="text-sm text-blue-700 mb-2">
+//                     Add ${(30 - subtotal).toFixed(2)} more for free delivery
+//                   </p>
+//                   <div className="w-full bg-blue-200 rounded-full h-2">
+//                     <div
+//                       className="bg-blue-600 h-2 rounded-full transition-all duration-500"
+//                       style={{ width: `${Math.min((subtotal / 30) * 100, 100)}%` }}
+//                     />
+//                   </div>
 //                 </div>
-//                 <div className="flex justify-between text-sm text-gray-500 mb-4">
-//                   <span>Delivery Fee:</span>
-//                   <span>Free</span>
+//               )}
+
+//               <div className="bg-gray-50 rounded-xl p-4 mt-4 space-y-2">
+//                 <div className="flex items-center gap-2 text-sm">
+//                   <FaTruck className="text-green-600" />
+//                   <span className="text-gray-600">Free delivery on orders over $30</span>
 //                 </div>
+//                 <div className="flex items-center gap-2 text-sm">
+//                   <FaShieldAlt className="text-blue-600" />
+//                   <span className="text-gray-600">Secure payment</span>
+//                 </div>
+//               </div>
+
+//               <div className="mt-6 space-y-3">
 //                 <button
-//                   onClick={() => router.push("/checkout")}
-//                   className="w-full bg-red-600 text-white py-3 rounded-lg font-semibold hover:bg-red-700 transition"
+//                   onClick={handleCheckout}
+//                   className="w-full bg-linear-to-r from-red-600 to-red-500 text-white py-3.5 rounded-xl font-semibold hover:from-red-700 hover:to-red-600 transition-all duration-300 shadow-lg flex items-center justify-center gap-2"
 //                 >
-//                   Proceed to Checkout
+//                   <FaLock size={16} />
+//                   Proceed to Payment
 //                 </button>
 //                 <button
-//                   onClick={handleClearCart}
-//                   className="w-full mt-2 text-red-600 text-sm hover:underline"
+//                   onClick={handleContinueShopping}
+//                   className="w-full py-3 border-2 border-gray-300 rounded-xl font-semibold hover:border-red-300 hover:text-red-600 transition"
 //                 >
-//                   Clear Cart
+//                   Continue Shopping
 //                 </button>
 //               </div>
-//             )}
+//             </div>
 //           </div>
-//         </>
-//       )}
+//         </div>
+//       </div>
+//     </div>
+//   );
+// }

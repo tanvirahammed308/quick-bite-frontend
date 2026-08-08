@@ -31,8 +31,23 @@ export default function PaymentPage() {
   }, []);
 
   if (!clientSecret) {
-    return <div className="text-center my-20">Loading...</div>;
-  }
+  return (
+    <div className="flex min-h-100 items-center justify-center">
+      <div className="flex flex-col items-center gap-4">
+        <div className="h-12 w-12 animate-spin rounded-full border-4 border-red-100 border-t-red-600"></div>
+
+        <div className="text-center">
+          <p className="text-lg font-semibold text-red-600">
+            Loading Payment...
+          </p>
+          <p className="mt-1 text-sm text-gray-500">
+            Please wait while we prepare your payment.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
 
   return (
     <StripeProvider clientSecret={clientSecret}>

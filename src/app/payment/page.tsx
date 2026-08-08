@@ -31,7 +31,7 @@ export default function PaymentPage() {
   }, []);
 
   if (!clientSecret) {
-    return <div className="text-center mt-20">Loading...</div>;
+    return <div className="text-center my-20">Loading...</div>;
   }
 
   return (

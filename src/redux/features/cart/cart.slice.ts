@@ -87,18 +87,35 @@ export const clearCart = createAsyncThunk(
   "cart/clearCart",
   async (_, { rejectWithValue }) => {
     try {
+      console.log("🛒 Sending DELETE /cart request...");
+
       const response = await api.delete("/cart");
+
+      console.log("🛒 Clear cart response:", response.data);
+
       return response.data.cart as ICart;
-    } catch (error) {
+    } catch (error: unknown) {
+      console.error("❌ Clear cart request failed:", error);
+
       if (error instanceof AxiosError) {
-        const message = error.response?.data?.message || "Failed to clear cart";
-        return rejectWithValue(message);
+        console.error("Status:", error.response?.status);
+        console.error("Response:", error.response?.data);
+        console.error("URL:", error.config?.url);
+
+        return rejectWithValue({
+          message:
+            error.response?.data?.message ||
+            "Failed to clear cart",
+          status: error.response?.status,
+        });
       }
-      return rejectWithValue("Failed to clear cart");
+
+      return rejectWithValue({
+        message: "Failed to clear cart",
+      });
     }
   }
 );
-
 // ============= Slice =============
 
 const cartSlice = createSlice({

@@ -2,145 +2,152 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-
 import { useAppDispatch } from "@/redux/hooks";
-import {
-clearCart,
-getCart,
-} from "@/redux/features/cart/cart.slice";
+import { clearCart } from "@/redux/features/cart/cart.slice";
+import { auth } from "@/lib/firebase";
+import { onAuthStateChanged } from "firebase/auth";
 
 export default function PaymentSuccessPage() {
-const dispatch = useAppDispatch();
+  const dispatch = useAppDispatch();
 
-const [clearingCart, setClearingCart] = useState(true);
-const [cartCleared, setCartCleared] = useState(false);
-const [clearError, setClearError] = useState(false);
+  const [clearing, setClearing] = useState(true);
+  const [clearError, setClearError] = useState("");
 
-useEffect(() => {
-let mounted = true;
-
-
-const clearPurchasedCart = async () => {
-  try {
+  useEffect(() => {
     console.log("Payment successful.");
-    console.log("Clearing cart...");
+    console.log("Waiting for Firebase authentication...");
 
-    // Clear cart from backend/database
-    await dispatch(clearCart()).unwrap();
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      console.log("Firebase user:", user);
 
-    console.log("Cart cleared from backend.");
+      if (!user) {
+        console.error("No Firebase user available.");
+        setClearError(
+          "Your login session is not ready. Please log in again."
+        );
+        setClearing(false);
+        return;
+      }
 
-    // Get the latest cart from backend
-    await dispatch(getCart()).unwrap();
+      try {
+        console.log("Firebase user ready:", user.uid);
 
-    console.log("Redux cart refreshed.");
+        // Make sure we have a fresh Firebase token
+        const token = await user.getIdToken(true);
 
-    if (mounted) {
-      setCartCleared(true);
-      setClearingCart(false);
-    }
-  } catch (error) {
-    console.error("Failed to clear cart after payment:", error);
+        console.log(
+          "Firebase token received:",
+          token ? "YES" : "NO"
+        );
 
-    if (mounted) {
-      setClearError(true);
-      setClearingCart(false);
-    }
-  }
-};
+        console.log("Clearing cart...");
 
-clearPurchasedCart();
+        await dispatch(clearCart()).unwrap();
 
-return () => {
-  mounted = false;
-};
+        console.log("Cart cleared successfully.");
 
+        setClearing(false);
+      } catch (error) {
+        console.error("Failed to clear cart:", error);
 
-}, [dispatch]);
+        setClearError(
+          "Payment succeeded, but we could not clear your cart."
+        );
 
-return ( <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-10"> <div className="w-full max-w-lg"> <div className="bg-white rounded-3xl shadow-xl p-8 sm:p-10 text-center">
+        setClearing(false);
+      }
+    });
 
-```
-      {/* Success Icon */}
-      <div className="mx-auto w-24 h-24 rounded-full bg-green-100 flex items-center justify-center">
-        <div className="w-16 h-16 rounded-full bg-green-500 flex items-center justify-center shadow-lg shadow-green-200">
-          <span className="text-4xl text-white">✓</span>
+    return () => {
+      unsubscribe();
+    };
+  }, [dispatch]);
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+      <div className="w-full max-w-lg rounded-2xl bg-white p-8 text-center shadow-xl">
+
+        {/* Success Icon */}
+        <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-green-100">
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-green-500 shadow-lg shadow-green-200">
+            <span className="text-4xl text-white">✓</span>
+          </div>
         </div>
-      </div>
 
-      {/* Celebration */}
-      <div className="mt-5">
-        <span className="text-4xl">🎉</span>
-      </div>
-
-      {/* Title */}
-      <h1 className="mt-4 text-3xl sm:text-4xl font-bold text-green-600">
-        Payment Successful!
-      </h1>
-
-      {/* Message */}
-      <p className="mt-4 text-gray-600 leading-relaxed">
-        Thank you for your order. Your payment has been processed
-        successfully.
-      </p>
-
-      {/* Cart Status */}
-      {clearingCart && (
-        <div className="mt-5 flex items-center justify-center gap-3 text-gray-500">
-          <div className="w-5 h-5 border-2 border-red-600 border-t-transparent rounded-full animate-spin" />
-
-          <span className="text-sm">
-            Clearing your cart...
-          </span>
+        {/* Celebration */}
+        <div className="mt-5">
+          <span className="text-4xl">🎉</span>
         </div>
-      )}
 
-      {cartCleared && (
-        <div className="mt-5 rounded-xl bg-green-50 border border-green-200 px-4 py-3">
-          <p className="text-sm font-semibold text-green-700">
-            ✓ Your cart has been cleared successfully.
-          </p>
-        </div>
-      )}
+        {/* Title */}
+        <h1 className="mt-4 text-3xl font-bold text-green-600">
+          Payment Successful!
+        </h1>
 
-      {clearError && (
-        <div className="mt-5 rounded-xl bg-red-50 border border-red-200 px-4 py-3">
-          <p className="text-sm font-semibold text-red-700">
-            Payment succeeded, but we could not clear your cart.
-          </p>
+        <p className="mt-4 leading-relaxed text-gray-600">
+          Thank you for your order. Your payment has been processed
+          successfully.
+        </p>
 
-          <button
-            onClick={() => window.location.reload()}
-            className="mt-2 text-sm font-semibold text-red-600 hover:text-red-700 underline"
+        {/* Cart clearing status */}
+        {clearing && (
+          <div className="mt-5 rounded-xl bg-blue-50 p-4">
+            <div className="mx-auto mb-3 h-6 w-6 animate-spin rounded-full border-4 border-blue-200 border-t-blue-600" />
+
+            <p className="font-semibold text-blue-700">
+              Clearing your cart...
+            </p>
+
+            <p className="mt-1 text-sm text-blue-600">
+              Please wait a moment.
+            </p>
+          </div>
+        )}
+
+        {/* Success */}
+        {!clearing && !clearError && (
+          <div className="mt-5 rounded-xl bg-green-50 p-4">
+            <p className="font-semibold text-green-700">
+              ✓ Your cart has been cleared.
+            </p>
+          </div>
+        )}
+
+        {/* Error */}
+        {!clearing && clearError && (
+          <div className="mt-5 rounded-xl bg-red-50 p-4">
+            <p className="font-semibold text-red-700">
+              {clearError}
+            </p>
+
+            <button
+              onClick={() => window.location.reload()}
+              className="mt-3 rounded-lg bg-red-600 px-5 py-2 text-sm font-semibold text-white hover:bg-red-700"
+            >
+              Try Again
+            </button>
+          </div>
+        )}
+
+        {/* Buttons */}
+        <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+
+          <Link
+            href="/"
+            className="flex-1 rounded-xl bg-red-600 px-6 py-3.5 font-semibold text-white shadow-lg shadow-red-200 transition hover:bg-red-700"
           >
-            Try again
-          </button>
+            🏠 Go to Home
+          </Link>
+
+          <Link
+            href="/menu"
+            className="flex-1 rounded-xl border-2 border-red-600 px-6 py-3.5 font-semibold text-red-600 transition hover:bg-red-50"
+          >
+            🍽️ Continue Shopping
+          </Link>
+
         </div>
-      )}
-
-      {/* Buttons */}
-      <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-
-        <Link
-          href="/"
-          className="flex-1 rounded-xl bg-red-600 px-6 py-3.5 text-white font-semibold transition hover:bg-red-700 shadow-lg shadow-red-200"
-        >
-          🏠 Go to Home
-        </Link>
-
-        <Link
-          href="/orders"
-          className="flex-1 rounded-xl border-2 border-red-600 px-6 py-3.5 font-semibold text-red-600 transition hover:bg-red-50"
-        >
-          📦 View Orders
-        </Link>
-
       </div>
-
     </div>
-  </div>
-</div>
-
-
-);
+  );
 }

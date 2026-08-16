@@ -1,51 +1,44 @@
 import axios from "axios";
-import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "./firebase";
+import { getIdToken } from "firebase/auth";
 
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL,
-  headers: {
-    "Content-Type": "application/json",
-  },
 });
-
-const waitForAuthUser = (): Promise<import("firebase/auth").User | null> => {
-  return new Promise((resolve) => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      unsubscribe();
-      resolve(user);
-    });
-  });
-};
 
 api.interceptors.request.use(
   async (config) => {
     try {
-      let user = auth.currentUser;
+      // Wait for Firebase's current user
+      const user = auth.currentUser;
 
-      // Firebase may not have restored the session yet
-      if (!user) {
-        user = await waitForAuthUser();
-      }
-
-      console.log("🔥 Firebase user:", user?.uid);
+      console.log("🔥 Axios Firebase user:", user);
 
       if (!user) {
-        console.error("❌ No authenticated Firebase user");
+        console.warn("❌ No Firebase user found");
         return config;
       }
 
-      const token = await user.getIdToken(true);
+      // Get Firebase ID token
+      const token = await getIdToken(user, true);
 
-      console.log("🔥 Firebase token received:", !!token);
+      console.log(
+        "🔥 Firebase token:",
+        token ? "TOKEN RECEIVED" : "NO TOKEN"
+      );
 
       config.headers.Authorization = `Bearer ${token}`;
 
-      console.log("🔥 Authorization header attached");
+      console.log(
+        "✅ Authorization header attached"
+      );
 
       return config;
     } catch (error) {
-      console.error("❌ Failed to attach Firebase token:", error);
+      console.error(
+        "❌ Firebase token error:",
+        error
+      );
 
       return Promise.reject(error);
     }

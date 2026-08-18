@@ -152,6 +152,7 @@ const userSlice = createSlice({
     // Set current user manually
     setCurrentUser: (state, action: PayloadAction<IUser | null>) => {
       state.currentUser = action.payload;
+      state.loading = false;
     },
   },
   

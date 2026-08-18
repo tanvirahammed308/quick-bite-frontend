@@ -10,7 +10,7 @@ const initialState: IUserState = {
   currentUser: null,
   users: [],
   selectedUser: null,
-  loading: false,
+  loading: true,
   error: null,
   totalCount: 0,
 };

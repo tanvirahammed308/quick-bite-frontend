@@ -494,7 +494,7 @@ export default function Navbar() {
 
                 {/* Cart count badge on mobile hamburger */}
                 {cartCount > 0 && !isSidebarOpen && (
-                  <span className="absolute -top-1 right-3 bg-red-600 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
+                  <span className="absolute -top-1 -right-3 bg-red-600 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
                     {cartCount > 9 ? "9+" : cartCount}
                   </span>
                 )}

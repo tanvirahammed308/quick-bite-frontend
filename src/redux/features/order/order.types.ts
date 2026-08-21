@@ -1,4 +1,6 @@
 // redux/features/order/order.types.ts
+import type { ReactNode } from "react";
+
 
 export interface IOrderItem {
   product: string;

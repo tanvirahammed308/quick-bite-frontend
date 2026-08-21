@@ -64,8 +64,42 @@ export default function Navbar() {
   const isAdmin = currentUser?.role === "admin";
 
   useEffect(() => {
-    setIsMounted(true);
-  }, []);
+  const restoreUserSession = async () => {
+    const token = localStorage.getItem("token");
+
+    // No token at all -> definitely logged out, resolve immediately.
+    if (!token) {
+      // Defer to break the synchronous dispatch chain
+      queueMicrotask(() => dispatch(clearUserData()));
+      return;
+    }
+
+    // We already have a user in Redux -> nothing to restore.
+    if (currentUser) {
+      return;
+    }
+
+    // We have a token but no user in Redux yet -> verify with backend.
+    try {
+      const response = await api.get("/auth/me", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (response.data.user) {
+        dispatch(setCurrentUser(response.data.user));
+        localStorage.setItem("user", JSON.stringify(response.data.user));
+      } else {
+        dispatch(clearUserData());
+      }
+    } catch (error) {
+      console.error("Session expired:", error);
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      dispatch(clearUserData());
+    }
+  };
+
+  restoreUserSession();
+}, [dispatch, currentUser]);
 
   // Restore user session on page refresh (only on client)
   // Every path below MUST resolve loading (via dispatch) so the navbar
@@ -306,7 +340,7 @@ export default function Navbar() {
       <nav className="bg-black/50 shadow-lg sticky top-0 z-50 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <div className="flex-shrink-0">
+            <div className="flex-shrink:0">
               <div className="flex items-center gap-2 text-xl font-bold text-gray-300">
                 <div className="w-10 h-10 bg-gray-600 rounded-full animate-pulse"></div>
                 <div className="w-32 h-6 bg-gray-600 rounded animate-pulse"></div>
@@ -328,7 +362,7 @@ export default function Navbar() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
-            <div className="flex-shrink-0">
+            <div className="flex-shrink:0">
               <button
                 onClick={() => handleNavigation("/")}
                 className="flex items-center gap-2 hover:opacity-80 transition cursor-pointer"
@@ -396,11 +430,13 @@ export default function Navbar() {
                   >
                     <div className="flex items-center gap-2 bg-white/10 rounded-full px-3 py-2 hover:bg-white/20 transition">
                       {currentUser.avatar ? (
-                        <img
-                          src={currentUser.avatar}
-                          alt={currentUser.name}
-                          className="w-8 h-8 rounded-full object-cover"
-                        />
+                        <Image
+  src={currentUser.avatar}
+  alt={currentUser.name}
+  width={32}
+  height={32}
+  className="w-8 h-8 rounded-full object-cover"
+/>
                       ) : (
                         <FaUserCircle className="text-2xl text-white" />
                       )}
@@ -517,14 +553,16 @@ export default function Navbar() {
             className="fixed left-0 top-14 h-full w-80 bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-out overflow-y-auto"
           >
             {currentUser && (
-              <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-red-50 to-red-50">
+              <div className="p-4 border-b border-gray-200 bg-linear-r from-red-50 to-red-50">
                 <div className="flex items-center gap-3">
                   {currentUser.avatar ? (
-                    <img
-                      src={currentUser.avatar}
-                      alt={currentUser.name}
-                      className="w-12 h-12 rounded-full object-cover"
-                    />
+                    <Image
+  src={currentUser.avatar}
+  alt={currentUser.name}
+  width={48}
+  height={48}
+  className="w-12 h-12 rounded-full object-cover"
+/>
                   ) : (
                     <FaUserCircle className="text-4xl text-gray-500" />
                   )}

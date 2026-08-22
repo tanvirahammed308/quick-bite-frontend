@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
@@ -15,23 +14,22 @@ export function useAuthGuard(requireAdmin: boolean = false) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
+    let cancelled = false;
+
     const checkAuth = async () => {
-      setIsLoading(true);
-      
-      // First, try to restore session from localStorage
       const token = localStorage.getItem("token");
       const savedUser = localStorage.getItem("user");
-      
-      // If we have token and saved user but no currentUser in Redux
+
+      // Try to restore session from localStorage if Redux doesn't have a user yet
       if (token && savedUser && !currentUser) {
         try {
-          // Verify token with backend
           const response = await api.get("/auth/me", {
             headers: { Authorization: `Bearer ${token}` },
           });
-          
+
+          if (cancelled) return;
+
           if (response.data.user) {
-            // Restore user to Redux
             dispatch(setCurrentUser(response.data.user));
             localStorage.setItem("user", JSON.stringify(response.data.user));
             setIsAuthenticated(true);
@@ -44,39 +42,47 @@ export function useAuthGuard(requireAdmin: boolean = false) {
           localStorage.removeItem("user");
         }
       }
-      
-      // Check if we have currentUser in Redux
-      if (currentUser) {
-        // Check admin requirement
-        if (requireAdmin && currentUser.role !== "admin") {
-          router.push("/");
+
+      if (cancelled) return;
+
+      // Everything below can run with no prior `await` (e.g. no token at all),
+      // so defer to break the synchronous dispatch/setState chain.
+      queueMicrotask(() => {
+        if (cancelled) return;
+
+        if (currentUser) {
+          if (requireAdmin && currentUser.role !== "admin") {
+            setIsAuthenticated(false);
+            setIsLoading(false);
+            router.push("/");
+            return;
+          }
+          setIsAuthenticated(true);
           setIsLoading(false);
           return;
         }
-        setIsAuthenticated(true);
+
+        // No user found anywhere, redirect to login
+        setIsAuthenticated(false);
         setIsLoading(false);
-        return;
-      }
-      
-      // No user found, redirect to login
-      setIsAuthenticated(false);
-      setIsLoading(false);
-      router.push("/login");
+        router.push("/login");
+      });
     };
-    
+
     checkAuth();
+
+    return () => {
+      cancelled = true;
+    };
   }, [currentUser, dispatch, requireAdmin, router]);
 
-  // Show loading while checking
   if (isLoading || reduxLoading) {
     return { user: null, loading: true };
   }
 
-  // Not authenticated
   if (!isAuthenticated) {
     return { user: null, loading: false };
   }
 
-  // Authenticated
   return { user: currentUser, loading: false };
 }

@@ -13,6 +13,8 @@ import {
   FaTimesCircle,
   FaReceipt,
   FaUtensils,
+  FaChevronLeft,
+  FaChevronRight,
 } from "react-icons/fa";
 
 import api from "@/lib/axios";
@@ -30,6 +32,8 @@ const STATUS_ICONS: Record<OrderStatus, React.ReactNode> = {
   cancelled: <FaTimesCircle size={12} />,
 };
 
+const ORDERS_PER_PAGE = 10;
+
 export default function OrdersPage() {
   const router = useRouter();
 
@@ -38,6 +42,7 @@ export default function OrdersPage() {
   const [orders, setOrders] = useState<IOrder[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     if (authLoading) return;
@@ -65,6 +70,41 @@ export default function OrdersPage() {
       day: "numeric",
     });
 
+  // ============================================
+  // PAGINATION
+  // ============================================
+
+  const totalPages = Math.max(1, Math.ceil(orders.length / ORDERS_PER_PAGE));
+  const startIndex = (currentPage - 1) * ORDERS_PER_PAGE;
+  const paginatedOrders = orders.slice(startIndex, startIndex + ORDERS_PER_PAGE);
+
+  const goToPage = (page: number) => {
+    const clamped = Math.min(Math.max(page, 1), totalPages);
+    setCurrentPage(clamped);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  // Build a compact page number list (with ellipses for long lists)
+  const getPageNumbers = (): (number | "...")[] => {
+    if (totalPages <= 7) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+
+    const pages: (number | "...")[] = [1];
+
+    if (currentPage > 3) pages.push("...");
+
+    const start = Math.max(2, currentPage - 1);
+    const end = Math.min(totalPages - 1, currentPage + 1);
+    for (let i = start; i <= end; i++) pages.push(i);
+
+    if (currentPage < totalPages - 2) pages.push("...");
+
+    pages.push(totalPages);
+
+    return pages;
+  };
+
   if (authLoading || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white px-4">
@@ -85,7 +125,6 @@ export default function OrdersPage() {
   if (!currentUser) return null;
 
   if (error) {
-    console.log("error",error)
     return (
       <div className="min-h-screen flex items-center justify-center bg-white px-4">
         <div className="max-w-md text-center bg-white border-2 border-red-100 rounded-2xl shadow-lg p-10">
@@ -151,7 +190,7 @@ export default function OrdersPage() {
 
         {/* Orders list */}
         <div className="space-y-5">
-          {orders.map((order) => {
+          {paginatedOrders.map((order) => {
             const statusInfo = ORDER_STATUS_INFO[order.orderStatus];
 
             return (
@@ -239,6 +278,49 @@ export default function OrdersPage() {
             );
           })}
         </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-center gap-2 mt-8">
+            <button
+              onClick={() => goToPage(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="p-2.5 rounded-lg border border-red-100 text-red-600 hover:bg-red-50 disabled:opacity-40 disabled:hover:bg-transparent transition"
+              aria-label="Previous page"
+            >
+              <FaChevronLeft size={14} />
+            </button>
+
+            {getPageNumbers().map((page, idx) =>
+              page === "..." ? (
+                <span key={`ellipsis-${idx}`} className="px-2 text-gray-400 select-none">
+                  …
+                </span>
+              ) : (
+                <button
+                  key={page}
+                  onClick={() => goToPage(page)}
+                  className={`min-w-[2.5rem] h-10 px-3 rounded-lg font-semibold text-sm transition ${
+                    page === currentPage
+                      ? "bg-red-600 text-white"
+                      : "text-gray-700 border border-red-100 hover:bg-red-50"
+                  }`}
+                >
+                  {page}
+                </button>
+              )
+            )}
+
+            <button
+              onClick={() => goToPage(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="p-2.5 rounded-lg border border-red-100 text-red-600 hover:bg-red-50 disabled:opacity-40 disabled:hover:bg-transparent transition"
+              aria-label="Next page"
+            >
+              <FaChevronRight size={14} />
+            </button>
+          </div>
+        )}
 
       </div>
     </div>

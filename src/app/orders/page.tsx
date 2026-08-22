@@ -45,7 +45,7 @@ export default function OrdersPage() {
 
     const loadOrders = async () => {
       try {
-        const response = await api.get("/orders");
+        const response = await api.get("/orders/my-orders");
         setOrders(response.data.orders ?? []);
       } catch (err) {
         console.error("Failed to load orders:", err);
@@ -85,6 +85,7 @@ export default function OrdersPage() {
   if (!currentUser) return null;
 
   if (error) {
+    console.log("error",error)
     return (
       <div className="min-h-screen flex items-center justify-center bg-white px-4">
         <div className="max-w-md text-center bg-white border-2 border-red-100 rounded-2xl shadow-lg p-10">

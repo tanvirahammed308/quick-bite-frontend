@@ -7,7 +7,7 @@ import { useAuthGuard } from "@/hooks/useAuthGuard";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { getAllProducts } from "@/redux/features/product/product.slice";
 import { getAllOrders } from "@/redux/features/order/order.slice";
-import { getAllUsers } from "@/redux/features/user/user.slice";
+import { getAllUsers } from "@/redux/features/auth/auth.slice";
 import { ORDER_STATUS_INFO } from "@/redux/features/order/order.types";
 import {
   FaSpinner,
@@ -29,7 +29,7 @@ export default function AdminDashboardPage() {
 
   const { products, loading: productsLoading } = useAppSelector((state) => state.product);
   const { orders, loading: ordersLoading } = useAppSelector((state) => state.order);
-  const { users, loading: usersLoading } = useAppSelector((state) => state.user);
+  const { users, loading: usersLoading } = useAppSelector((state) => state.auth);
 
   useEffect(() => {
     if (user) {

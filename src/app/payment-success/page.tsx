@@ -17,69 +17,31 @@ export default function PaymentSuccessPage() {
   useEffect(() => {
     let mounted = true;
 
-    console.log("💳 Payment successful.");
-    console.log("🔥 Waiting for Firebase authentication...");
-
-    const unsubscribe = onAuthStateChanged(
-      auth,
-      async (user) => {
-        console.log("🔥 Firebase auth state:", user);
-
-        if (!user) {
-          console.error("❌ Firebase user is null");
-
-          if (mounted) {
-            setError(
-              "Authentication is not available. Please log in again."
-            );
-            setClearing(false);
-          }
-
-          return;
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        if (mounted) {
+          setError("Authentication is not available. Please log in again.");
+          setClearing(false);
         }
+        return;
+      }
 
-        try {
-          console.log(
-            "✅ Firebase user:",
-            user.uid
-          );
+      try {
+        // Force refresh Firebase token before the cart-clear request
+        await user.getIdToken(true);
 
-          // Force refresh Firebase token
-          const token = await user.getIdToken(true);
+        await dispatch(clearCart()).unwrap();
 
-          console.log(
-            "✅ Firebase token received:",
-            !!token
-          );
-
-          console.log(
-            "🛒 Clearing cart..."
-          );
-
-          await dispatch(clearCart()).unwrap();
-
-          console.log(
-            "✅ Cart cleared successfully"
-          );
-
-          if (mounted) {
-            setClearing(false);
-          }
-        } catch (err) {
-          console.error(
-            "❌ Failed to clear cart:",
-            err
-          );
-
-          if (mounted) {
-            setError(
-              "Payment succeeded, but we could not clear your cart."
-            );
-            setClearing(false);
-          }
+        if (mounted) {
+          setClearing(false);
+        }
+      } catch {
+        if (mounted) {
+          setError("Payment succeeded, but we could not clear your cart.");
+          setClearing(false);
         }
       }
-    );
+    });
 
     return () => {
       mounted = false;
@@ -93,48 +55,36 @@ export default function PaymentSuccessPage() {
 
         <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-green-100">
           <div className="flex h-16 w-16 items-center justify-center rounded-full bg-green-500">
-            <span className="text-4xl text-white">
-              ✓
-            </span>
+            <span className="text-4xl text-white">✓</span>
           </div>
         </div>
 
-        <div className="mt-5 text-4xl">
-          🎉
-        </div>
+        <div className="mt-5 text-4xl">🎉</div>
 
         <h1 className="mt-4 text-3xl font-bold text-green-600">
           Payment Successful!
         </h1>
 
         <p className="mt-4 text-gray-600">
-          Thank you for your order. Your payment has been
-          processed successfully.
+          Thank you for your order. Your payment has been processed successfully.
         </p>
 
         {clearing && (
-          <div className="mt-6 rounded-xl bg-blue-50 p-4">
-            <div className="mx-auto h-6 w-6 animate-spin rounded-full border-4 border-blue-200 border-t-blue-600" />
-
-            <p className="mt-3 font-semibold text-blue-700">
-              Clearing your cart...
-            </p>
+          <div className="mt-6 rounded-xl bg-red-50 p-4">
+            <div className="mx-auto h-6 w-6 animate-spin rounded-full border-4 border-red-200 border-t-red-600" />
+            <p className="mt-3 font-semibold text-red-700">Clearing your cart...</p>
           </div>
         )}
 
         {!clearing && !error && (
           <div className="mt-6 rounded-xl bg-green-50 p-4">
-            <p className="font-semibold text-green-700">
-              ✓ Your cart has been cleared.
-            </p>
+            <p className="font-semibold text-green-700">✓ Your cart has been cleared.</p>
           </div>
         )}
 
         {!clearing && error && (
           <div className="mt-6 rounded-xl bg-red-50 p-4">
-            <p className="font-semibold text-red-700">
-              {error}
-            </p>
+            <p className="font-semibold text-red-700">{error}</p>
 
             <button
               onClick={() => window.location.reload()}

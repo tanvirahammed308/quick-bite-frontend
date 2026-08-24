@@ -3,14 +3,13 @@ import { IUpdateProfileData, IUpdateRoleData, IUser, IUserState } from "./auth.t
 import api from "@/lib/axios";
 import { AxiosError } from "axios";
 
-
-
 // Initial state
 const initialState: IUserState = {
   currentUser: null,
   users: [],
   selectedUser: null,
   loading: true,
+  usersLoading: false,
   error: null,
   totalCount: 0,
 };
@@ -31,8 +30,6 @@ export const getCurrentUser = createAsyncThunk(
       }
       return rejectWithValue('Failed to fetch current user');
     }
-
-
   }
 );
 
@@ -52,6 +49,7 @@ export const updateProfile = createAsyncThunk(
     }
   }
 );
+
 // Get all users (admin only)
 export const getAllUsers = createAsyncThunk(
   'user/getAllUsers',
@@ -133,32 +131,33 @@ const userSlice = createSlice({
     clearError: (state) => {
       state.error = null;
     },
-    
+
     // Clear selected user
     clearSelectedUser: (state) => {
       state.selectedUser = null;
     },
-    
+
     // Clear all user data (for logout)
     clearUserData: (state) => {
       state.currentUser = null;
       state.users = [];
       state.selectedUser = null;
       state.loading = false;
+      state.usersLoading = false;
       state.error = null;
       state.totalCount = 0;
     },
-    
+
     // Set current user manually
     setCurrentUser: (state, action: PayloadAction<IUser | null>) => {
       state.currentUser = action.payload;
       state.loading = false;
     },
   },
-  
+
   extraReducers: (builder) => {
     builder
-      // ============= Get Current User =============
+      // ============= Get Current User (session) =============
       .addCase(getCurrentUser.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -173,7 +172,7 @@ const userSlice = createSlice({
         state.currentUser = null;
       })
 
-      // ============= Update Profile =============
+      // ============= Update Profile (session) =============
       .addCase(updateProfile.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -181,14 +180,12 @@ const userSlice = createSlice({
       .addCase(updateProfile.fulfilled, (state, action: PayloadAction<IUser>) => {
         state.loading = false;
         state.currentUser = action.payload;
-        
-        // Also update in users list if exists
+
         const index = state.users.findIndex(u => u._id === action.payload._id);
         if (index !== -1) {
           state.users[index] = action.payload;
         }
-        
-        // Update selected user if it's the same
+
         if (state.selectedUser?._id === action.payload._id) {
           state.selectedUser = action.payload;
         }
@@ -198,83 +195,79 @@ const userSlice = createSlice({
         state.error = action.payload as string;
       })
 
-      // ============= Get All Users =============
+      // ============= Get All Users (admin — separate loading) =============
       .addCase(getAllUsers.pending, (state) => {
-        state.loading = true;
+        state.usersLoading = true;
         state.error = null;
       })
       .addCase(getAllUsers.fulfilled, (state, action) => {
-        state.loading = false;
+        state.usersLoading = false;
         state.users = action.payload.users;
         state.totalCount = action.payload.count;
       })
       .addCase(getAllUsers.rejected, (state, action) => {
-        state.loading = false;
+        state.usersLoading = false;
         state.error = action.payload as string;
       })
 
-      // ============= Get User By ID =============
+      // ============= Get User By ID (admin — separate loading) =============
       .addCase(getUserById.pending, (state) => {
-        state.loading = true;
+        state.usersLoading = true;
         state.error = null;
       })
       .addCase(getUserById.fulfilled, (state, action: PayloadAction<IUser>) => {
-        state.loading = false;
+        state.usersLoading = false;
         state.selectedUser = action.payload;
       })
       .addCase(getUserById.rejected, (state, action) => {
-        state.loading = false;
+        state.usersLoading = false;
         state.error = action.payload as string;
         state.selectedUser = null;
       })
 
-      // ============= Update User Role =============
+      // ============= Update User Role (admin — separate loading) =============
       .addCase(updateUserRole.pending, (state) => {
-        state.loading = true;
+        state.usersLoading = true;
         state.error = null;
       })
       .addCase(updateUserRole.fulfilled, (state, action: PayloadAction<IUser>) => {
-        state.loading = false;
-        
-        // Update in users list
+        state.usersLoading = false;
+
         const index = state.users.findIndex(u => u._id === action.payload._id);
         if (index !== -1) {
           state.users[index] = action.payload;
         }
-        
-        // Update selected user if it's the same
+
         if (state.selectedUser?._id === action.payload._id) {
           state.selectedUser = action.payload;
         }
-        
-        // Update current user if it's the same (admin changing own role)
+
         if (state.currentUser?._id === action.payload._id) {
           state.currentUser = action.payload;
         }
       })
       .addCase(updateUserRole.rejected, (state, action) => {
-        state.loading = false;
+        state.usersLoading = false;
         state.error = action.payload as string;
       })
 
-      // ============= Delete User =============
+      // ============= Delete User (admin — separate loading) =============
       .addCase(deleteUser.pending, (state) => {
-        state.loading = true;
+        state.usersLoading = true;
         state.error = null;
       })
       .addCase(deleteUser.fulfilled, (state, action: PayloadAction<string>) => {
-        state.loading = false;
-        // Remove from users list
+        state.usersLoading = false;
+
         state.users = state.users.filter(u => u._id !== action.payload);
         state.totalCount -= 1;
-        
-        // Clear selected user if deleted
+
         if (state.selectedUser?._id === action.payload) {
           state.selectedUser = null;
         }
       })
       .addCase(deleteUser.rejected, (state, action) => {
-        state.loading = false;
+        state.usersLoading = false;
         state.error = action.payload as string;
       });
   },

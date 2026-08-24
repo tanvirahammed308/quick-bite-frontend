@@ -29,7 +29,7 @@ export default function AdminDashboardPage() {
 
   const { products, loading: productsLoading } = useAppSelector((state) => state.product);
   const { orders, loading: ordersLoading } = useAppSelector((state) => state.order);
-  const { users, usersLoading } = useAppSelector((state) => state.auth); 
+  const { users, usersLoading } = useAppSelector((state) => state.auth);
 
   useEffect(() => {
     if (user) {
@@ -82,7 +82,7 @@ export default function AdminDashboardPage() {
   const statCards = [
     {
       label: "Total Revenue",
-      value: `₹${totalRevenue.toLocaleString()}`,
+      value: `$${totalRevenue.toLocaleString()}`,
       icon: <FaDollarSign />,
       accent: "bg-red-600 text-white",
     },
@@ -245,7 +245,7 @@ export default function AdminDashboardPage() {
                           {statusInfo.label}
                         </span>
                         <span className="font-semibold text-red-600 text-sm w-16 text-right">
-                          ₹{order.totalPrice.toFixed(0)}
+                          ${order.totalPrice.toFixed(0)}
                         </span>
                       </div>
                     </Link>

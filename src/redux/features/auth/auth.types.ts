@@ -15,6 +15,7 @@ export interface IUserState {
   currentUser: IUser | null;
   users: IUser[];
   selectedUser: IUser | null;
+  usersLoading: boolean;   
   loading: boolean;
   error: string | null;
   totalCount: number;

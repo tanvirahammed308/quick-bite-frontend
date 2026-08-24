@@ -29,7 +29,7 @@ export default function AdminDashboardPage() {
 
   const { products, loading: productsLoading } = useAppSelector((state) => state.product);
   const { orders, loading: ordersLoading } = useAppSelector((state) => state.order);
-  const { users, loading: usersLoading } = useAppSelector((state) => state.auth);
+  const { users, usersLoading } = useAppSelector((state) => state.auth); 
 
   useEffect(() => {
     if (user) {
@@ -40,10 +40,6 @@ export default function AdminDashboardPage() {
   }, [dispatch, user]);
 
   const dataLoading = productsLoading || ordersLoading || usersLoading;
-
-  // ============================================
-  // COMPUTED STATS
-  // ============================================
 
   const totalRevenue = orders
     .filter((o) => o.paymentStatus === "paid")
@@ -68,10 +64,6 @@ export default function AdminDashboardPage() {
       minute: "2-digit",
     });
 
-  // ============================================
-  // LOADING / GUARD
-  // ============================================
-
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
@@ -86,10 +78,6 @@ export default function AdminDashboardPage() {
   if (!user || user.role !== "admin") {
     return null;
   }
-
-  // ============================================
-  // STAT CARD CONFIG
-  // ============================================
 
   const statCards = [
     {
@@ -143,7 +131,6 @@ export default function AdminDashboardPage() {
     <div className="min-h-screen bg-white">
       <div className="container mx-auto px-4 py-8">
 
-        {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-red-600">Admin Dashboard</h1>
           <p className="text-gray-500 mt-1">
@@ -151,7 +138,6 @@ export default function AdminDashboardPage() {
           </p>
         </div>
 
-        {/* Stat Cards */}
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
           {statCards.map((stat) => (
             <div
@@ -171,7 +157,6 @@ export default function AdminDashboardPage() {
           ))}
         </div>
 
-        {/* Alerts row */}
         {!dataLoading && (pendingOrdersCount > 0 || lowStockCount > 0 || outOfStockCount > 0) && (
           <div className="grid sm:grid-cols-3 gap-4 mb-8">
             {pendingOrdersCount > 0 && (
@@ -215,7 +200,6 @@ export default function AdminDashboardPage() {
 
         <div className="grid lg:grid-cols-3 gap-6">
 
-          {/* Recent Orders */}
           <div className="lg:col-span-2 bg-white rounded-2xl shadow-lg border border-red-100 p-6">
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
@@ -271,7 +255,6 @@ export default function AdminDashboardPage() {
             )}
           </div>
 
-          {/* Quick Links */}
           <div className="bg-white rounded-2xl shadow-lg border border-red-100 p-6">
             <h2 className="text-lg font-bold text-gray-800 mb-5">Quick Actions</h2>
             <div className="space-y-3">
